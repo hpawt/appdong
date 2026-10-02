@@ -1,6 +1,8 @@
 <script>
+	import { resolve } from '$app/paths';
 	import { enhance, applyAction } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { onDestroy } from 'svelte';
 
 	export let form;
 
@@ -8,17 +10,26 @@
 	let password = '';
 	let confirmPassword = '';
 	let showPassword = false;
-	
+
 	let signupSuccess = false;
-	let phone1 = '', phone2 = '', phone3 = '';
-	let phoneEl2, phoneEl3;
+	/** @type {ReturnType<typeof setTimeout> | undefined} */
+	let redirectTimer;
+	onDestroy(() => clearTimeout(redirectTimer));
+	let phone1 = '',
+		phone2 = '',
+		phone3 = '';
+	/** @type {HTMLInputElement | undefined} */
+	let phoneEl2;
+	/** @type {HTMLInputElement | undefined} */
+	let phoneEl3;
 
 	// 전화번호 입력 시 다음 칸으로 자동 포커스 이동 함수
+	/** @param {number} part @param {Event} event */
 	function handlePhoneInput(part, event) {
-		const input = event.target;
+		const input = /** @type {HTMLInputElement} */ (event.target);
 		if (input.value.length === input.maxLength) {
-			if (part === 1) phoneEl2.focus();
-			if (part === 2) phoneEl3.focus();
+			if (part === 1) phoneEl2?.focus();
+			if (part === 2) phoneEl3?.focus();
 		}
 	}
 </script>
@@ -34,19 +45,19 @@
 		{:else}
 			<div>
 				<h2 class="title">회원가입</h2>
-				<p class="subtitle">개인정보는 DB에 해싱되어 안전하게 보관됩니다.</p>
+				<p class="subtitle">비밀번호는 해시로 저장되며, 가입 정보는 동아리 운영에 사용됩니다.</p>
 
-				<form 
+				<form
 					method="POST"
 					use:enhance={() => {
 						// 서버로부터 응답이 오면 실행될 콜백
 						return async ({ result }) => {
 							if (result.type === 'success') {
-								form = result.data; 
+								await applyAction(result);
 								signupSuccess = true;
-								
-								setTimeout(() => {
-									goto('/');
+
+								redirectTimer = setTimeout(() => {
+									goto(resolve('/'));
 								}, 2500);
 							} else {
 								await applyAction(result);
@@ -56,73 +67,123 @@
 				>
 					<div class="form-group">
 						<label for="username">아이디</label>
-						<input type="text" id="username" name="username" placeholder="아이디 (3자 이상)" required />
+						<input
+							type="text"
+							id="username"
+							name="username"
+							placeholder="아이디 (3자 이상)"
+							required
+						/>
 					</div>
 
 					<div class="form-group">
 						<label for="name">성함</label>
 						<input type="text" id="name" name="name" placeholder="성함을 입력하세요" required />
 					</div>
-					
+
 					<div class="form-group">
 						<label for="student_id">학번</label>
-						<input type="tel" id="student_id" name="student_id" placeholder="학번 10자리" required inputmode="numeric" />
+						<input
+							type="tel"
+							id="student_id"
+							name="student_id"
+							placeholder="학번 10자리"
+							required
+							inputmode="numeric"
+						/>
 					</div>
 
 					<div class="form-group">
 						<label for="department">학과(부)</label>
-						<input type="text" id="department" name="department" placeholder="학과(부)를 입력하세요" required />
+						<input
+							type="text"
+							id="department"
+							name="department"
+							placeholder="학과(부)를 입력하세요"
+							required
+						/>
 					</div>
 
 					<div class="form-group">
 						<label for="phone1">전화번호</label>
 						<div class="phone-input-group">
 							<!-- 👇 문제가 되었던 pattern과 title 속성을 모두 제거했습니다. -->
-							<input type="tel" id="phone1" name="phone1" maxlength="3" required inputmode="numeric" bind:value={phone1} on:input={(e) => handlePhoneInput(1, e)} />
+							<input
+								type="tel"
+								id="phone1"
+								name="phone1"
+								maxlength="3"
+								required
+								inputmode="numeric"
+								bind:value={phone1}
+								on:input={(e) => handlePhoneInput(1, e)}
+							/>
 							<span>-</span>
-							<input type="tel" id="phone2" name="phone2" maxlength="4" required inputmode="numeric" bind:value={phone2} bind:this={phoneEl2} on:input={(e) => handlePhoneInput(2, e)} />
+							<input
+								type="tel"
+								id="phone2"
+								name="phone2"
+								maxlength="4"
+								required
+								inputmode="numeric"
+								bind:value={phone2}
+								bind:this={phoneEl2}
+								on:input={(e) => handlePhoneInput(2, e)}
+							/>
 							<span>-</span>
-							<input type="tel" id="phone3" name="phone3" maxlength="4" required inputmode="numeric" bind:value={phone3} bind:this={phoneEl3} />
+							<input
+								type="tel"
+								id="phone3"
+								name="phone3"
+								maxlength="4"
+								required
+								inputmode="numeric"
+								bind:value={phone3}
+								bind:this={phoneEl3}
+							/>
 						</div>
 					</div>
 
 					<div class="form-group">
 						<label for="password">비밀번호</label>
 						<div class="password-input-wrapper">
-							<input 
+							<input
 								type={showPassword ? 'text' : 'password'}
-								id="password" 
-								name="password" 
-								placeholder="비밀번호 (6자 이상)" 
-								required 
+								id="password"
+								name="password"
+								placeholder="비밀번호 (6자 이상)"
+								required
 								bind:value={password}
 							/>
-							<button 
-								type="button" 
+							<button
+								type="button"
 								class="toggle-password"
 								on:click={() => (showPassword = !showPassword)}
 								aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
 							>
-								<img src={showPassword ? '/eye.png' : '/eye.png'} alt="toggle password visibility" />
+								<img
+									src={showPassword ? '/eye.png' : '/eye.png'}
+									alt="toggle password visibility"
+								/>
 							</button>
 						</div>
 					</div>
-					
+
 					<div class="form-group">
 						<label for="confirm_password">비밀번호 확인</label>
-						<input 
-							type="password" 
-							id="confirm_password" 
-							name="confirm_password" 
-							placeholder="비밀번호를 다시 입력하세요" 
-							required 
+						<input
+							type="password"
+							id="confirm_password"
+							name="confirm_password"
+							placeholder="비밀번호를 다시 입력하세요"
+							required
 							bind:value={confirmPassword}
 						/>
 						{#if password && confirmPassword && password !== confirmPassword}
 							<p class="password-mismatch">비밀번호가 일치하지 않습니다.</p>
 						{/if}
 					</div>
-					
+
 					{#if form?.message && !signupSuccess}
 						<p class="error-message">{form.message}</p>
 					{/if}
@@ -130,7 +191,7 @@
 					<button type="submit" class="submit-button">가입하기</button>
 				</form>
 				<p class="switch-form">
-					이미 계정이 있으신가요? <a href="/login">로그인</a>
+					이미 계정이 있으신가요? <a href={resolve('/login')}>로그인</a>
 				</p>
 			</div>
 		{/if}
@@ -158,8 +219,14 @@
 	}
 
 	@keyframes fadeIn {
-		from { opacity: 0; transform: translateY(20px); }
-		to { opacity: 1; transform: translateY(0); }
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 
 	.title {
@@ -200,7 +267,9 @@
 		padding: 0.9rem 1rem;
 		border-radius: 8px;
 		font-size: 1rem;
-		transition: border-color 0.2s ease, box-shadow 0.2s ease;
+		transition:
+			border-color 0.2s ease,
+			box-shadow 0.2s ease;
 	}
 
 	input::placeholder {
@@ -213,7 +282,7 @@
 		border-color: var(--primary-color);
 		box-shadow: 0 0 0 3px rgba(255, 62, 0, 0.2);
 	}
-	
+
 	.submit-button {
 		background-color: var(--primary-color);
 		color: white;
@@ -224,7 +293,9 @@
 		font-weight: bold;
 		cursor: pointer;
 		margin-top: 1rem;
-		transition: transform 0.2s ease, filter 0.2s ease;
+		transition:
+			transform 0.2s ease,
+			filter 0.2s ease;
 	}
 
 	.submit-button:hover {
@@ -241,19 +312,19 @@
 		text-align: center;
 	}
 
-    .switch-form {
-        text-align: center;
-        margin-top: 2rem;
-        font-size: 0.9rem;
-        color: var(--secondary-color);
-    }
+	.switch-form {
+		text-align: center;
+		margin-top: 2rem;
+		font-size: 0.9rem;
+		color: var(--secondary-color);
+	}
 
-    .switch-form a {
-        color: var(--primary-color);
-        font-weight: 500;
-        text-decoration: none;
-        transition: opacity 0.2s;
-    }
+	.switch-form a {
+		color: var(--primary-color);
+		font-weight: 500;
+		text-decoration: none;
+		transition: opacity 0.2s;
+	}
 
 	.switch-form a:hover {
 		opacity: 0.8;
@@ -276,19 +347,19 @@
 	.phone-input-group input {
 		text-align: center;
 		/* 기본 너비를 100%로 설정하여 flex가 크기를 조절할 수 있도록 합니다. */
-		width: 100%; 
+		width: 100%;
 	}
 	/* name 속성을 이용해 각 input을 개별적으로 타겟팅합니다. */
-	.phone-input-group input[name="phone1"] {
+	.phone-input-group input[name='phone1'] {
 		flex-grow: 3; /* 3의 비율로 공간을 차지합니다. */
 	}
-	.phone-input-group input[name="phone2"] {
+	.phone-input-group input[name='phone2'] {
 		flex-grow: 4; /* 4의 비율로 공간을 차지합니다. */
 	}
-	.phone-input-group input[name="phone3"] {
+	.phone-input-group input[name='phone3'] {
 		flex-grow: 4; /* 4의 비율로 공간을 차지합니다. */
 	}
-	
+
 	.phone-input-group span {
 		color: var(--secondary-color);
 	}
@@ -334,16 +405,16 @@
 		color: #ff9494;
 		margin-top: 0.5rem;
 	}
-@media (max-width: 480px) {
-	.auth-wrapper {
-		padding: 1rem;
-		min-height: 80vh;
+	@media (max-width: 480px) {
+		.auth-wrapper {
+			padding: 1rem;
+			min-height: 80vh;
+		}
+		.auth-container {
+			padding: 2rem 1.5rem;
+		}
+		.title {
+			font-size: 2rem;
+		}
 	}
-	.auth-container {
-		padding: 2rem 1.5rem;
-	}
-	.title {
-		font-size: 2rem;
-	}
-}
 </style>

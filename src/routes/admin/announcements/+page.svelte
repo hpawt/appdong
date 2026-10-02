@@ -1,17 +1,30 @@
 <!-- src/routes/admin/announcements/+page.svelte -->
 <script>
+	import { resolve } from '$app/paths';
 	export let data;
 </script>
 
 <div class="page-container">
 	<header class="page-header">
 		<h1>공지사항 관리</h1>
-		<a href="/admin/announcements/new" class="create-button">
-			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+		<a href={resolve('/admin/announcements/new')} class="create-button">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"
+				></line></svg
+			>
 			<span>새 공지사항 작성</span>
 		</a>
 	</header>
-	
+
 	<p>총 {data.announcements.length}개의 공지사항이 있습니다.</p>
 
 	<div class="table-wrapper">
@@ -26,13 +39,22 @@
 			</thead>
 			<tbody>
 				{#if data.announcements.length > 0}
-					{#each data.announcements as item}
+					{#each data.announcements as item (item.id)}
 						<tr>
-							<td><a href={`/announce/${item.id}`} target="_blank" title="공개 페이지에서 보기">{item.title}</a></td>
+							<td
+								><a
+									href={resolve('/announce/[id]', { id: item.id })}
+									target="_blank"
+									title="공개 페이지에서 보기">{item.title}</a
+								></td
+							>
 							<td>{item.authorName}</td>
 							<td>{new Date(item.createdAt).toLocaleDateString('ko-KR')}</td>
 							<td>
-								<a href={`/admin/announcements/${item.id}/edit`} class="action-link">수정 / 삭제</a>
+								<a
+									href={resolve('/admin/announcements/[id]/edit', { id: item.id })}
+									class="action-link">수정 / 삭제</a
+								>
 							</td>
 						</tr>
 					{/each}
@@ -92,7 +114,8 @@
 		width: 100%;
 		border-collapse: collapse;
 	}
-	th, td {
+	th,
+	td {
 		padding: 1rem;
 		text-align: left;
 		border-bottom: 1px solid var(--border-color);

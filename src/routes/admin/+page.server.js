@@ -1,17 +1,23 @@
 import { count } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { user as userTable, application as appTable, announcement as annTable } from '$lib/server/db/schema';
+import { requireAdmin } from '$lib/server/permissions';
+import {
+	user as userTable,
+	application as appTable,
+	announcement as annTable
+} from '$lib/server/db/schema';
 
-export async function load() {
+export async function load({ locals }) {
+	requireAdmin(locals);
 	const [userCountResult] = await db.select({ value: count() }).from(userTable);
 	const [appCountResult] = await db.select({ value: count() }).from(appTable);
 	// 👇 총 공지사항 수를 계산합니다.
 	const [annCountResult] = await db.select({ value: count() }).from(annTable);
-	
+
 	const recentUsers = await db.query.user.findMany({
 		limit: 5,
 		orderBy: (users, { desc }) => [desc(users.id)],
-		columns: { username: true, name: true }
+		columns: { id: true, username: true, name: true }
 	});
 
 	const recentApps = await db.query.application.findMany({

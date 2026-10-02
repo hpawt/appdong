@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	export let data;
 </script>
 
@@ -19,9 +20,11 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each data.users as user}
+			{#each data.users as user (user.id)}
 				<tr>
-					<td><a href={`/admin/users/${user.id}`}>{user.username}</a></td>
+					<td
+						><a href={resolve('/admin/users/[userId]', { userId: user.id })}>{user.username}</a></td
+					>
 					<td>{user.name}</td>
 					<td>{user.student_id}</td>
 					<td>{user.department}</td>
@@ -42,9 +45,26 @@
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 	}
-	table { width: 100%; border-collapse: collapse; margin-top: 0; }
-	th, td { padding: 0.8rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; /* 내용이 줄바꿈되지 않도록 */ }
-	th { background-color: #2c2f38; }
-	tr:last-child td { border-bottom: none; }
-	a { color: var(--primary-color); text-decoration: underline; }
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		margin-top: 0;
+	}
+	th,
+	td {
+		padding: 0.8rem 1rem;
+		text-align: left;
+		border-bottom: 1px solid var(--border-color);
+		white-space: nowrap; /* 내용이 줄바꿈되지 않도록 */
+	}
+	th {
+		background-color: #2c2f38;
+	}
+	tr:last-child td {
+		border-bottom: none;
+	}
+	a {
+		color: var(--primary-color);
+		text-decoration: underline;
+	}
 </style>

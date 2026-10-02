@@ -6,7 +6,7 @@
 			role: '회장',
 			// 👇 나중에 실제 이미지 경로로 바꿔주세요. (예: '/images/members/homin.jpg')
 			// imageUrl: 'https://placehold.co/400x400/252830/FFF?text=Homin'
-            imageUrl: '/homin1.png'
+			imageUrl: '/homin1.png'
 		},
 		{
 			name: '이고은',
@@ -40,7 +40,7 @@
 			department: '전자공학부',
 			role: '기술부장', // 나중에 직책을 수정하세요.
 			imageUrl: '/junho.png'
-		},
+		}
 	];
 </script>
 
@@ -54,7 +54,7 @@
 	<section class="team-section">
 		<h2 class="section-title">임원진</h2>
 		<div class="members-grid leadership-grid">
-			{#each leadership as member}
+			{#each leadership as member (member.name)}
 				<div class="member-card">
 					<div class="member-photo">
 						<img src={member.imageUrl} alt="{member.name} 프로필 사진" />
@@ -68,12 +68,12 @@
 			{/each}
 		</div>
 	</section>
-	
+
 	<!-- 부원 섹션 -->
 	<section class="team-section">
-		<h2 class="section-title"></h2>
+		<h2 class="section-title">운영진</h2>
 		<div class="members-grid">
-			{#each members as member}
+			{#each members as member (member.name)}
 				<div class="member-card">
 					<div class="member-photo">
 						<img src={member.imageUrl} alt="{member.name} 프로필 사진" />
@@ -90,12 +90,28 @@
 </div>
 
 <style>
-	.page-container { max-width: 1100px; margin: 0 auto; padding: 4rem 2rem; }
-	.page-header { text-align: center; margin-bottom: 5rem; }
-	.page-header h1 { font-family: var(--font-serif); font-size: 3.5rem; margin-bottom: 1rem; }
-	.page-header p { font-size: 1.2rem; color: var(--secondary-color); }
+	.page-container {
+		max-width: 1100px;
+		margin: 0 auto;
+		padding: 4rem 2rem;
+	}
+	.page-header {
+		text-align: center;
+		margin-bottom: 5rem;
+	}
+	.page-header h1 {
+		font-family: var(--font-serif);
+		font-size: 3.5rem;
+		margin-bottom: 1rem;
+	}
+	.page-header p {
+		font-size: 1.2rem;
+		color: var(--secondary-color);
+	}
 
-	.team-section { margin-bottom: 5rem; }
+	.team-section {
+		margin-bottom: 5rem;
+	}
 	.section-title {
 		font-family: var(--font-serif);
 		font-size: 2.2rem;
@@ -123,7 +139,9 @@
 		border-radius: 16px;
 		padding: 2rem;
 		text-align: center;
-		transition: transform 0.2s ease, box-shadow 0.2s ease;
+		transition:
+			transform 0.2s ease,
+			box-shadow 0.2s ease;
 	}
 	.member-card:hover {
 		transform: translateY(-8px);
@@ -162,7 +180,11 @@
 	}
 
 	@media (max-width: 768px) {
-		.page-header h1 { font-size: 2.8rem; }
-		.leadership-grid { max-width: 100%; }
+		.page-header h1 {
+			font-size: 2.8rem;
+		}
+		.leadership-grid {
+			max-width: 100%;
+		}
 	}
 </style>

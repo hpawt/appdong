@@ -7,9 +7,7 @@
 		address: '대구광역시 북구 대학로 80, 경북대학교 백호관 610호',
 		email: '@knu.appdong',
 		president: { name: '송호민', phone: 'Hominsong@knu.ac.kr' },
-		vicePresidents: [
-			{ name: '이고은', phone: 'Youka1122@naver.com' },
-		],
+		vicePresidents: [{ name: '이고은', phone: 'Youka1122@naver.com' }],
 		social: {
 			instagram: 'https://www.instagram.com/knu.appdong',
 			github: 'https://github.com/APPDONG-KNU',
@@ -22,17 +20,41 @@
 	<div class="footer-content">
 		<!-- 상단 섹션: Copyright 및 소셜 아이콘 -->
 		<div class="footer-top">
-			<p class="copyright">Copyright © {clubInfo.copyrightYear} {clubInfo.name} All Rights Reserved.</p>
+			<p class="copyright">
+				Copyright © {clubInfo.copyrightYear}
+				{clubInfo.name} All Rights Reserved.
+			</p>
 			<div class="social-links">
-				<a href={clubInfo.social.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+				<!-- eslint-disable svelte/no-navigation-without-resolve -- This is an external URL validated before rendering. -->
+				<a
+					href={new URL(clubInfo.social.instagram).href}
+					target="_blank"
+					rel="noopener noreferrer"
+					aria-label="Instagram"
+				>
 					<img src="/igimg.svg" alt="Instagram" />
 				</a>
-				<a href={clubInfo.social.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
+				<!-- eslint-disable svelte/no-navigation-without-resolve -- This is an external URL validated before rendering. -->
+				<a
+					href={new URL(clubInfo.social.github).href}
+					target="_blank"
+					rel="noopener noreferrer"
+					aria-label="GitHub"
+				>
 					<img src="/ghimg.svg" alt="GitHub" />
 				</a>
-				<a href={clubInfo.social.discord} target="_blank" rel="noopener noreferrer" aria-label="Discord">
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
+				<!-- eslint-disable svelte/no-navigation-without-resolve -- This is an external URL validated before rendering. -->
+				<a
+					href={new URL(clubInfo.social.discord).href}
+					target="_blank"
+					rel="noopener noreferrer"
+					aria-label="Discord"
+				>
 					<img src="/dcimg.svg" alt="Discord" />
 				</a>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			</div>
 		</div>
 
@@ -57,7 +79,7 @@
 				</div>
 				<div class="contact-group">
 					<p class="role"><strong>부 회장</strong></p>
-					{#each clubInfo.vicePresidents as vice}
+					{#each clubInfo.vicePresidents as vice (vice.name)}
 						<p>{vice.name} {vice.phone}</p>
 					{/each}
 				</div>
@@ -143,7 +165,7 @@
 	.details a:hover {
 		color: var(--primary-color);
 	}
-	
+
 	.info-right {
 		display: flex;
 		gap: 3rem;
@@ -157,7 +179,7 @@
 	.role strong {
 		color: var(--text-color);
 	}
-	
+
 	@media (max-width: 768px) {
 		.footer-bottom {
 			flex-direction: column;

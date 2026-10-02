@@ -1,23 +1,14 @@
 <script>
-	import DOMPurify from 'dompurify';
-	import { onMount } from 'svelte';
-
+	import { resolve } from '$app/paths';
 	export let data;
-	const { announcement } = data;
-
-	let sanitizedContent = '';
-	onMount(() => {
-		if (announcement && announcement.content) {
-			sanitizedContent = DOMPurify.sanitize(announcement.content);
-		}
-	});
+	$: announcement = data.announcement;
 </script>
 
 <div class="page-container">
 	{#if announcement}
 		<article class="post">
 			<header class="post-header">
-				<a href="/announce" class="back-link">&larr; 공지사항 목록으로</a>
+				<a href={resolve('/announce')} class="back-link">&larr; 공지사항 목록으로</a>
 				<h1>{announcement.title}</h1>
 				<p class="meta">
 					<span>By <strong>{announcement.authorName}</strong></span>
@@ -25,12 +16,29 @@
 					<span>{new Date(announcement.createdAt).toLocaleString('ko-KR')}</span>
 				</p>
 			</header>
-			
+
 			<div class="content ql-snow">
 				<div class="ql-editor">
-					{@html sanitizedContent}
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -- Server load sanitizes both stored and new HTML with an allowlist. -->
+					{@html announcement.content}
 				</div>
 			</div>
+			{#if announcement.attachments.length}
+				<section aria-label="첨부파일">
+					<h2>첨부파일</h2>
+					<ul>
+						{#each announcement.attachments as file (file.url)}
+							<li>
+								<!-- eslint-disable svelte/no-navigation-without-resolve -- This is an external URL validated before rendering. -->
+								<a href={new URL(file.url).href} target="_blank" rel="noopener noreferrer"
+									>{file.name}</a
+								>
+								<!-- eslint-enable svelte/no-navigation-without-resolve -->
+							</li>
+						{/each}
+					</ul>
+				</section>
+			{/if}
 		</article>
 	{:else}
 		<div class="error-view">
@@ -61,7 +69,7 @@
 		text-decoration: none;
 		font-weight: 500;
 	}
-	
+
 	.post-header h1 {
 		font-family: var(--font-serif);
 		font-size: 3.5rem;
@@ -77,11 +85,11 @@
 		font-size: 1rem;
 	}
 
-	.meta strong, .author strong {
+	.meta strong {
 		color: var(--text-color);
 		font-weight: 500;
 	}
-	
+
 	/* ==========================================================================
 	   (핵심 수정) Quill 콘텐츠 스타일
 	   ========================================================================== */
@@ -91,9 +99,9 @@
 		line-height: 2;
 		color: #d1d5db;
 	}
-	
+
 	/* 👇 (수정) 이 규칙은 오직 '아래 여백'만 담당하도록 합니다. 밑줄(border)은 절대 넣지 않습니다. */
-	:global(.content .ql-editor > *) { 
+	:global(.content .ql-editor > *) {
 		margin-bottom: 1.75rem !important;
 	}
 
@@ -110,10 +118,16 @@
 		margin-top: 4rem;
 		margin-bottom: 1.5rem !important;
 	}
-	:global(.content .ql-editor h1) { font-size: 2.2rem; }
-	:global(.content .ql-editor h2) { font-size: 1.8rem; }
-	:global(.content .ql-editor h3) { font-size: 1.5rem; }
-	
+	:global(.content .ql-editor h1) {
+		font-size: 2.2rem;
+	}
+	:global(.content .ql-editor h2) {
+		font-size: 1.8rem;
+	}
+	:global(.content .ql-editor h3) {
+		font-size: 1.5rem;
+	}
+
 	:global(.content .ql-editor a) {
 		color: var(--primary-color);
 		text-decoration: none;
@@ -124,16 +138,25 @@
 		background-color: rgba(255, 62, 0, 0.1);
 		border-bottom-color: var(--primary-color);
 	}
-	
+
 	:global(.content .ql-editor strong) {
 		color: var(--text-color);
 		font-weight: 600;
 	}
-	
-	.error-view { text-align: center; padding: 4rem 0; }
+
+	.error-view {
+		text-align: center;
+		padding: 4rem 0;
+	}
 
 	@media (max-width: 768px) {
-		.page-container { margin: 2rem auto; padding: 1.5rem; }
-		.post-header h1 { font-size: 2.5rem; letter-spacing: -1px; }
+		.page-container {
+			margin: 2rem auto;
+			padding: 1.5rem;
+		}
+		.post-header h1 {
+			font-size: 2.5rem;
+			letter-spacing: -1px;
+		}
 	}
 </style>

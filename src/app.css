@@ -5,7 +5,7 @@
 	--bg-color: #1a1d24;
 	--text-color: #e2e2e2;
 	--primary-color: #ff3e00;
-	--secondary-color: #676778;
+	--secondary-color: #a4a9b8;
 	--border-color: #333;
 
 	--font-serif: 'Playfair Display', serif;
@@ -20,7 +20,9 @@ body {
 	line-height: 1.6;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
 	font-family: var(--font-serif);
 	font-weight: 700;
 }

@@ -1,7 +1,7 @@
 export const menuData = [
 	{
 		title: 'About Us',
-		path: '/about-us', 
+		path: '/about-us',
 		columns: [
 			{
 				links: [

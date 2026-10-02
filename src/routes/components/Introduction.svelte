@@ -6,10 +6,10 @@
 		<p class="meaning">열정있는 당신, 그리고 누구나</p>
 	</div>
 	<div class="description">
-
-앱동은, 한 학기동안 한 명이 앱이나 웹 서비스 하나를 완성하는 것을 목표로 활동합니다.<br>
-앱동은 코딩 실력과 경험 수준에 맞게, Vibe 클래스 / 스터디 / 부트캠프로 나누어 메인 활동을 진행합니다. <br>
-각 부원은 스터디, 부트캠프 또는 Vibe 클래스를 선택하여 참여할 수 있습니다.<br>
+		앱동은, 한 학기동안 한 명이 앱이나 웹 서비스 하나를 완성하는 것을 목표로 활동합니다.<br />
+		앱동은 코딩 실력과 경험 수준에 맞게, Vibe 클래스 / 스터디 / 부트캠프로 나누어 메인 활동을 진행합니다.
+		<br />
+		각 부원은 스터디, 부트캠프 또는 Vibe 클래스를 선택하여 참여할 수 있습니다.<br />
 	</div>
 </section>
 
@@ -39,19 +39,13 @@
 		color: var(--secondary-color);
 		margin-top: 0.5rem;
 	}
-	.description p {
-		font-size: 1.0rem;
-		line-height: 1.8;
-		max-width: 800px;
-	}
 
-@media (max-width: 768px) {
-	.intro-section {
-		grid-template-columns: 1fr;
-		gap: 2rem;
-		padding: 4rem 0;
-		text-align: center;
+	@media (max-width: 768px) {
+		.intro-section {
+			grid-template-columns: 1fr;
+			gap: 2rem;
+			padding: 4rem 0;
+			text-align: center;
+		}
 	}
-	.description p { font-size: 1.1rem; }
-}
 </style>

@@ -1,84 +1,118 @@
 import { eq } from 'drizzle-orm';
-import { fail, redirect } from '@sveltejs/kit';
-import { nanoid } from 'nanoid';
-
+import { fail } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { application as appTable, user as userTable } from '$lib/server/db/schema';
+import { readText, readChoices } from '$lib/server/validation';
 
 export async function load({ locals }) {
+	if (!locals.user) return { user: null, alreadySubmitted: false, userData: null };
 	const user = locals.user;
-
-	// 로그인 상태일 때만
-	if (user) {
-		// 이미 지원서를 제출했는지 확인
-		const [existingApplication] = await db.select().from(appTable).where(eq(appTable.userId, user.id));
-		if (existingApplication) {
-			return { user, alreadySubmitted: true };
-		}
-		
-		// 폼 자동 채우기를 위한 사용자 정보 가져오기
-		const currentUser = await db.query.user.findFirst({
-			where: eq(userTable.id, user.id),
-			columns: { name: true, phone_number: true, department: true, student_id: true }
-		});
-		return { user, alreadySubmitted: false, userData: currentUser };
-	}
-
-	// 비로그인 상태일 때
-	return { user: null, alreadySubmitted: false, userData: null };
+	const existingApplication = await db.query.application.findFirst({
+		where: eq(appTable.userId, user.id)
+	});
+	const userData = await db.query.user.findFirst({
+		where: eq(userTable.id, user.id),
+		columns: { name: true, phone_number: true, department: true, student_id: true }
+	});
+	return { user, alreadySubmitted: !!existingApplication, userData: userData ?? null };
 }
 
 export const actions = {
 	default: async ({ request, locals }) => {
+		const form = await request.formData();
+		const fullName = readText(form, 'fullName', { max: 255 });
+		const phoneNumber = readText(form, 'phoneNumber', { max: 11 });
+		const university = readText(form, 'university', { max: 255 });
+		const department = readText(form, 'department', { max: 255 });
+		const studentId = readText(form, 'studentId', { max: 20 });
+		const motivation = readText(form, 'motivation');
+		const programmingExperience = readText(form, 'programmingExperience', { max: 50 });
+		const githubExperience = readText(form, 'githubExperience', { max: 1 });
+		const activityChoice = readText(form, 'activityChoice', { max: 255 });
+		if (
+			!fullName ||
+			!university ||
+			!department ||
+			!studentId ||
+			!motivation ||
+			!/^\d{11}$/.test(phoneNumber)
+		)
+			return fail(400, { message: '필수 항목과 전화번호를 확인해주세요.' });
+		if (
+			!['거의 없음', '보통', '숙련자'].includes(programmingExperience) ||
+			!['유', '무'].includes(githubExperience) ||
+			!['Vibe 클래스', '스터디', '부트캠프 (일반)', '부트캠프 (멘토)'].includes(activityChoice)
+		)
+			return fail(400, { message: '경험과 참가 활동을 올바르게 선택해주세요.' });
+		const studySubjects = readChoices(form, 'studySubjects', [
+			'JavaScript',
+			'Python',
+			'Java',
+			'C/C++',
+			'Go'
+		]);
+		const memberLangs = readChoices(form, 'bootcampMemberLangs', [
+			'JavaScript',
+			'Python',
+			'Java',
+			'기타'
+		]);
+		const mentorLangs = readChoices(form, 'bootcampMentorLangs', [
+			'JavaScript',
+			'Python',
+			'Java',
+			'Swift',
+			'Kotlin',
+			'기타'
+		]);
 		const user = locals.user;
-		const formData = await request.formData();
-		const data = Object.fromEntries(formData);
-
-		if (user) {
-			const [existingApp] = await db.select().from(appTable).where(eq(appTable.userId, user.id));
-			if (existingApp) { return fail(403, { message: '이미 지원서를 제출했습니다.' }); }
+		try {
+			await db.transaction(async (tx) => {
+				if (user) {
+					// 같은 계정의 동시 제출은 사용자 행 잠금으로 직렬화합니다.
+					await tx
+						.select({ id: userTable.id })
+						.from(userTable)
+						.where(eq(userTable.id, user.id))
+						.for('update');
+					const [existing] = await tx
+						.select({ id: appTable.id })
+						.from(appTable)
+						.where(eq(appTable.userId, user.id));
+					if (existing) throw new Error('ALREADY_SUBMITTED');
+				}
+				await tx.insert(appTable).values({
+					id: `app_${crypto.randomUUID()}`,
+					userId: user?.id ?? null,
+					fullName,
+					phoneNumber,
+					university,
+					department,
+					studentId,
+					motivation,
+					programmingExperience,
+					githubExperience: /** @type {'유' | '무'} */ (githubExperience),
+					activityChoice,
+					studySubjects: JSON.stringify(studySubjects),
+					bootcampMemberLangs: JSON.stringify(memberLangs),
+					bootcampMentorLangs: JSON.stringify(mentorLangs),
+					vibeServiceIdea: readText(form, 'vibeServiceIdea'),
+					bootcampProjectIdea: readText(form, 'bootcampProjectIdea'),
+					bootcampMemberLangsOther: readText(form, 'bootcampMemberLangsOther', { max: 255 }),
+					bootcampMentorLangsOther: readText(form, 'bootcampMentorLangsOther', { max: 255 }),
+					mentorAvailableTime: readText(form, 'mentorAvailableTime'),
+					mentorExperience: readText(form, 'mentorExperience'),
+					knownFields: readText(form, 'knownFields'),
+					specificExperience: readText(form, 'specificExperience'),
+					finalWords: readText(form, 'finalWords')
+				});
+			});
+		} catch (cause) {
+			if (cause instanceof Error && cause.message === 'ALREADY_SUBMITTED')
+				return fail(403, { message: '이미 지원서를 제출했습니다.' });
+			if (cause && typeof cause === 'object' && 'status' in cause) throw cause;
+			return fail(503, { message: '지원서 저장에 실패했습니다. 잠시 후 다시 시도해주세요.' });
 		}
-		
-		// 필수 필드 유효성 검사
-		const requiredFields = ['fullName', 'phoneNumber', 'university', 'department', 'studentId', 'motivation', 'githubExperience', 'activityChoice'];
-		for (const field of requiredFields) {
-			if (!data[field]) {
-				return fail(400, { message: `필수 항목인 '${field}'을(를) 채워주세요.` });
-			}
-		}
-		
-		// 체크박스 데이터는 별도로 처리
-		const studySubjects = formData.getAll('studySubjects');
-		const bootcampMemberLangs = formData.getAll('bootcampMemberLangs');
-		const bootcampMentorLangs = formData.getAll('bootcampMentorLangs');
-
-		const applicationId = `app_${nanoid(15)}`;
-		await db.insert(appTable).values({
-			id: applicationId,
-			userId: user ? user.id : null,
-			fullName: data.fullName,
-			phoneNumber: data.phoneNumber,
-			university: data.university,
-			department: data.department,
-			studentId: data.studentId,
-			motivation: data.motivation,
-			programmingExperience: data.programmingExperience,
-			githubExperience: data.githubExperience,
-			activityChoice: data.activityChoice,
-			vibeServiceIdea: data.vibeServiceIdea || null,
-			studySubjects: JSON.stringify(studySubjects),
-			bootcampProjectIdea: data.bootcampProjectIdea || null,
-			bootcampMemberLangs: JSON.stringify(bootcampMemberLangs),
-			bootcampMemberLangsOther: data.bootcampMemberLangsOther || null,
-			bootcampMentorLangs: JSON.stringify(bootcampMentorLangs),
-			bootcampMentorLangsOther: data.bootcampMentorLangsOther || null,
-			mentorAvailableTime: data.mentorAvailableTime || null,
-			mentorExperience: data.mentorExperience || null,
-			knownFields: data.knownFields || null,
-			specificExperience: data.specificExperience || null,
-			finalWords: data.finalWords || null
-		});
-		
 		return { success: true };
 	}
 };

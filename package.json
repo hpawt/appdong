@@ -13,7 +13,9 @@
 		"lint": "eslint . && prettier --check .",
 		"format": "prettier --write .",
 		"test:e2e": "playwright test",
-		"test": "npm run test:e2e",
+		"test:auth": "node --experimental-vm-modules --test tests/admin-authorization.test.js",
+		"test": "npm run test:unit && npm run test:e2e",
+		"test:unit": "node --experimental-vm-modules --test tests/*.test.js",
 		"db:start": "docker compose up",
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
@@ -31,7 +33,9 @@
 		"@tailwindcss/typography": "^0.5.15",
 		"@tailwindcss/vite": "^4.0.0",
 		"@types/node": "^22",
-		"drizzle-kit": "^0.30.6",
+		"@types/sanitize-html": "^2.16.2",
+		"drizzle-kit": "^0.31.11",
+		"esbuild": "^0.28.2",
 		"eslint": "^9.18.0",
 		"eslint-config-prettier": "^10.0.1",
 		"eslint-plugin-svelte": "^3.0.0",
@@ -49,11 +53,19 @@
 		"@oslojs/crypto": "^1.0.1",
 		"@oslojs/encoding": "^1.1.0",
 		"@supabase/supabase-js": "^2.57.2",
-		"dompurify": "^3.2.6",
 		"dotenv": "^17.2.2",
-		"drizzle-orm": "^0.40.1",
-		"pg": "^8.16.3",
+		"drizzle-orm": "^0.45.3",
 		"postgres": "^3.4.7",
-		"quill": "^2.0.3"
+		"quill": "2.0.2",
+		"sanitize-html": "^2.18.0"
+	},
+	"overrides": {
+		"cookie": "^0.7.2",
+		"@esbuild-kit/core-utils": {
+			"esbuild": "^0.25.0"
+		},
+		"drizzle-kit": {
+			"esbuild": "^0.25.0"
+		}
 	}
 }

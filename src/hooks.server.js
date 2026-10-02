@@ -1,36 +1,41 @@
-// src/hooks.server.js
-import { sessionCookieName, validateSessionToken } from '$lib/server/auth';
+import { redirect } from '@sveltejs/kit';
+import {
+	sessionCookieName,
+	validateSessionToken,
+	setSessionTokenCookie,
+	deleteSessionTokenCookie
+} from '$lib/server/auth';
+import { requireAdmin } from '$lib/server/permissions';
 
+/** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
-	// ==========================================================
-	// (핵심 디버깅) 모든 요청에 대해 들어온 쿠키를 터미널에 출력합니다.
-	// ==========================================================
-	const sessionId = event.cookies.get(sessionCookieName);
-	console.log(`[HOOKS] Request to: ${event.url.pathname}`);
-	console.log(`[HOOKS] Session Cookie found:`, sessionId ? `YES (${sessionId.substring(0, 10)}...)` : 'NO');
-	// ==========================================================
-
-	if (!sessionId) {
-		event.locals.user = null;
-		event.locals.session = null;
-		return resolve(event);
+	const token = event.cookies.get(sessionCookieName);
+	event.locals.user = null;
+	event.locals.session = null;
+	if (token) {
+		const { user, session } = await validateSessionToken(token);
+		if (user && session) {
+			event.locals.user = user;
+			event.locals.session = session;
+			setSessionTokenCookie(event, token, session.expiresAt);
+		} else deleteSessionTokenCookie(event);
 	}
-
-	const { user, session } = await validateSessionToken(sessionId);
-
-	// ==========================================================
-	// (핵심 디버깅) 토큰 검증 후 사용자 정보를 터미널에 출력합니다.
-	// ==========================================================
-	console.log('[HOOKS] User validated:', user ? user.name : null);
-	// ==========================================================
-
-	if (user && session) {
-		event.locals.user = user;
-		event.locals.session = session;
-	} else {
-		event.locals.user = null;
-		event.locals.session = null;
+	const routeId = event.route.id ?? '';
+	if (routeId === '/admin' || routeId.startsWith('/admin/')) {
+		if (!event.locals.user && ['GET', 'HEAD'].includes(event.request.method))
+			redirect(303, '/login');
+		requireAdmin(event.locals);
 	}
-	
 	return resolve(event);
+}
+
+/** @type {import('@sveltejs/kit').HandleServerError} */
+export function handleError({ error: cause, status }) {
+	console.error('Request failed', status, cause instanceof Error ? cause.name : 'UnknownError');
+	return {
+		message:
+			status === 500
+				? '요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+				: '요청을 처리할 수 없습니다.'
+	};
 }

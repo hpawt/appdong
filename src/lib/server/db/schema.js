@@ -5,7 +5,6 @@ import { pgTable, varchar, text, timestamp, pgEnum } from 'drizzle-orm/pg-core';
 export const roleEnum = pgEnum('role', ['USER', 'ADMIN']);
 export const githubExperienceEnum = pgEnum('github_experience', ['유', '무']);
 
-
 // =================== user 테이블 ===================
 export const user = pgTable('user', {
 	id: varchar('id', { length: 255 }).primaryKey(),
@@ -19,14 +18,12 @@ export const user = pgTable('user', {
 	role: roleEnum('role').default('USER').notNull()
 });
 
-
 // =================== session 테이블 ===================
 export const session = pgTable('session', {
 	id: varchar('id', { length: 255 }).primaryKey(),
 	userId: varchar('user_id', { length: 255 }).references(() => user.id, { onDelete: 'cascade' }),
 	expiresAt: timestamp('expires_at', { mode: 'date', withTimezone: true }).notNull()
 });
-
 
 // =================== application 테이블 ===================
 export const application = pgTable('application', {
@@ -39,10 +36,10 @@ export const application = pgTable('application', {
 	studentId: varchar('student_id', { length: 20 }).notNull(),
 	motivation: text('motivation').notNull(),
 	programmingExperience: varchar('programming_experience', { length: 50 }).notNull(),
-	
+
 	// 2. (핵심) 미리 정의한 githubExperienceEnum을 참조하고, .notNull()은 여기에 붙입니다.
 	githubExperience: githubExperienceEnum('github_experience').notNull(),
-	
+
 	activityChoice: varchar('activity_choice', { length: 255 }).notNull(),
 	vibeServiceIdea: text('vibe_service_idea'),
 	studySubjects: text('study_subjects'),
@@ -59,13 +56,14 @@ export const application = pgTable('application', {
 	submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull().defaultNow()
 });
 
-
 // =================== announcement 테이블 ===================
 export const announcement = pgTable('announcement', {
 	id: varchar('id', { length: 255 }).primaryKey(),
 	title: varchar('title', { length: 255 }).notNull(),
 	content: text('content').notNull(),
-	authorId: varchar('author_id', { length: 255 }).references(() => user.id, { onDelete: 'set null' }),
+	authorId: varchar('author_id', { length: 255 }).references(() => user.id, {
+		onDelete: 'set null'
+	}),
 	authorName: varchar('author_name', { length: 255 }).notNull(),
 	attachments: text('attachments'),
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()

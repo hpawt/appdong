@@ -1,50 +1,61 @@
 <script>
+	import { resolve } from '$app/paths';
 	export let data;
-	const { stats, recentUsers, recentApps, recentAnns } = data;
+	$: ({ stats, recentUsers, recentApps, recentAnns } = data);
 </script>
 
 <div class="dashboard">
 	<h1 class="dashboard-title">관리자 대시보드</h1>
-	
+
 	<!-- 1. 핵심 지표 카드 (3단 그리드) -->
 	<div class="stats-grid">
 		<div class="stat-card">
 			<h2 class="card-title">총 회원 수</h2>
 			<p class="stat-number">{stats.totalUsers}</p>
-			<a href="/admin/users" class="card-link">회원 관리 바로가기 &rarr;</a>
+			<a href={resolve('/admin/users')} class="card-link">회원 관리 바로가기 &rarr;</a>
 		</div>
 		<div class="stat-card">
 			<h2 class="card-title">총 지원서 수</h2>
 			<p class="stat-number">{stats.totalApps}</p>
-			<a href="/admin/applications" class="card-link">지원서 조회 바로가기 &rarr;</a>
+			<a href={resolve('/admin/applications')} class="card-link">지원서 조회 바로가기 &rarr;</a>
 		</div>
 		<div class="stat-card">
 			<h2 class="card-title">총 공지사항 수</h2>
 			<p class="stat-number">{stats.totalAnns}</p>
-			<a href="/admin/announcements" class="card-link">공지사항 관리 바로가기 &rarr;</a>
+			<a href={resolve('/admin/announcements')} class="card-link">공지사항 관리 바로가기 &rarr;</a>
 		</div>
 	</div>
 
 	<!-- 2. 최근 활동 목록 (카드 디자인 통일) -->
 	<div class="recent-activity-grid">
 		<div class="activity-card">
-			<h3 class="card-title">최근 가입한 회원</h3>
+			<h3 class="card-title">회원 목록</h3>
 			{#if recentUsers.length > 0}
 				<ul class="activity-list">
-					{#each recentUsers as user}
-						<li><a href="/admin/users/{user.id}"><strong>{user.name}</strong> ({user.username})</a></li>
+					{#each recentUsers as user (user.id)}
+						<li>
+							<a href={resolve('/admin/users/[userId]', { userId: user.id })}
+								><strong>{user.name}</strong> ({user.username})</a
+							>
+						</li>
 					{/each}
 				</ul>
 			{:else}
-				<p class="empty-text">최근 가입한 회원이 없습니다.</p>
+				<p class="empty-text">가입한 회원이 없습니다.</p>
 			{/if}
 		</div>
 		<div class="activity-card">
 			<h3 class="card-title">최근 제출된 지원서</h3>
 			{#if recentApps.length > 0}
 				<ul class="activity-list">
-					{#each recentApps as app}
-						<li><a href={`/admin/applications/${app.id}`}><strong>{app.fullName}</strong> ({new Date(app.submittedAt).toLocaleDateString('ko-KR')})</a></li>
+					{#each recentApps as app (app.id)}
+						<li>
+							<a href={resolve('/admin/applications/[id]', { id: app.id })}
+								><strong>{app.fullName}</strong> ({new Date(app.submittedAt).toLocaleDateString(
+									'ko-KR'
+								)})</a
+							>
+						</li>
 					{/each}
 				</ul>
 			{:else}
@@ -55,8 +66,14 @@
 			<h3 class="card-title">최근 공지사항</h3>
 			{#if recentAnns.length > 0}
 				<ul class="activity-list">
-					{#each recentAnns as ann}
-						<li><a href={`/admin/announcements/${ann.id}/edit`}><strong>{ann.title}</strong> ({new Date(ann.createdAt).toLocaleDateString('ko-KR')})</a></li>
+					{#each recentAnns as ann (ann.id)}
+						<li>
+							<a href={resolve('/admin/announcements/[id]/edit', { id: ann.id })}
+								><strong>{ann.title}</strong> ({new Date(ann.createdAt).toLocaleDateString(
+									'ko-KR'
+								)})</a
+							>
+						</li>
 					{/each}
 				</ul>
 			{:else}
@@ -76,7 +93,8 @@
 	}
 
 	/* --- 공통 카드 스타일 --- */
-	.stat-card, .activity-card {
+	.stat-card,
+	.activity-card {
 		background-color: #2c2f38;
 		padding: 2rem;
 		border-radius: 12px;

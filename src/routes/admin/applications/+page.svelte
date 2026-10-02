@@ -1,5 +1,6 @@
 <!-- src/routes/admin/applications/+page.svelte -->
 <script>
+	import { resolve } from '$app/paths';
 	export let data;
 </script>
 
@@ -11,15 +12,17 @@
 
 	{#if data.applications.length > 0}
 		<div class="application-list">
-			{#each data.applications as app}
-				<a href={`/admin/applications/${app.id}`} class="application-card">
+			{#each data.applications as app (app.id)}
+				<a href={resolve('/admin/applications/[id]', { id: app.id })} class="application-card">
 					<div class="card-main">
 						<span class="applicant-name">{app.fullName}</span>
 						<span class="applicant-id">({app.studentId})</span>
 					</div>
 					<div class="card-sub">
 						<span class="department">{app.department}</span>
-						<span class="submitted-at">{new Date(app.submittedAt).toLocaleDateString('ko-KR')} 제출</span>
+						<span class="submitted-at"
+							>{new Date(app.submittedAt).toLocaleDateString('ko-KR')} 제출</span
+						>
 					</div>
 				</a>
 			{/each}
@@ -57,7 +60,9 @@
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		text-decoration: none;
-		transition: transform 0.2s ease, box-shadow 0.2s ease;
+		transition:
+			transform 0.2s ease,
+			box-shadow 0.2s ease;
 	}
 	.application-card:hover {
 		transform: translateY(-3px);

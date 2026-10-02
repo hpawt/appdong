@@ -1,10 +1,13 @@
 @import 'quill/dist/quill.snow.css';
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
 	box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
 	margin: 0;
 	padding: 0;
 	overflow-x: hidden;
@@ -14,7 +17,7 @@ html, body {
 	--bg-color: #1a1d24;
 	--text-color: #e2e2e2;
 	--primary-color: #ff3e00;
-	--secondary-color: #676778;
+	--secondary-color: #a4a9b8;
 	--border-color: #333;
 	--font-serif: 'Playfair Display', serif;
 	--font-sans: 'Roboto', sans-serif;
@@ -27,7 +30,9 @@ body {
 	line-height: 1.6;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
 	font-family: var(--font-serif);
 	font-weight: 700;
 }
@@ -38,8 +43,12 @@ a {
 }
 
 @media (max-width: 768px) {
-	h1 { font-size: 3rem; }
-	h2 { font-size: 2.25rem; }
+	h1 {
+		font-size: 3rem;
+	}
+	h2 {
+		font-size: 2.25rem;
+	}
 }
 
 /* 모바일 메뉴가 열렸을 때 배경 스크롤을 막는 클래스 */

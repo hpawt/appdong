@@ -1,41 +1,26 @@
 <script>
-	import { enhance, applyAction } from '$app/forms';
-	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { enhance } from '$app/forms';
+	import { parseStringList } from '$lib/attachments';
 	export let data;
 
-	// 서버(load 함수)로부터 받은 application 데이터를 사용합니다.
-	const { application } = data;
-
-	// JSON 문자열로 저장된 배열 데이터를 파싱합니다.
-	function parseJsonString(jsonString) {
-		if (!jsonString) return [];
-		try {
-			const parsed = JSON.parse(jsonString);
-			return Array.isArray(parsed) ? parsed : [];
-		} catch (e) {
-			return [];
-		}
-	}
-
-	const studySubjects = parseJsonString(application.studySubjects);
-	const bootcampMemberLangs = parseJsonString(application.bootcampMemberLangs);
-	const bootcampMentorLangs = parseJsonString(application.bootcampMentorLangs);
+	$: application = data.application;
+	$: studySubjects = parseStringList(application.studySubjects);
+	$: bootcampMemberLangs = parseStringList(application.bootcampMemberLangs);
+	$: bootcampMentorLangs = parseStringList(application.bootcampMentorLangs);
 </script>
 
 <div class="application-view">
 	<header class="page-header">
-		<a href="/admin/applications" class="back-link">&larr; 지원서 목록으로 돌아가기</a>
-		
-		<form 
-			method="POST" 
-			action="?/delete"
+		<a href={resolve('/admin/applications')} class="back-link">&larr; 지원서 목록으로 돌아가기</a>
+
+		<form
+			method="POST"
+			action="?/deleteApplication"
 			use:enhance={({ cancel }) => {
 				if (!confirm(`${application.fullName}님의 지원서를 정말 삭제하시겠습니까?`)) {
 					cancel();
 				}
-				return async ({ result }) => {
-					if (result.type === 'redirect') { await goto(result.location); }
-				};
 			}}
 		>
 			<button type="submit" class="delete-button">지원서 삭제</button>
@@ -50,17 +35,17 @@
 			<span>{new Date(application.submittedAt).toLocaleString('ko-KR')} 제출</span>
 		</div>
 	</div>
-	
+
 	<div class="content-block">
 		<h2>기본 정보</h2>
 		<p><strong>GitHub 사용 경험:</strong> {application.githubExperience}</p>
 		<p><strong>선택한 활동:</strong> <span class="highlight">{application.activityChoice}</span></p>
 	</div>
 
-    	<div class="content-block">
+	<div class="content-block">
 		<h2>프로그래밍 경험</h2>
 		<p><strong>경험 수준:</strong> {application.programmingExperience}</p>
-		
+
 		<!-- '보통' 또는 '숙련자'일 경우에만 표시 -->
 		{#if application.programmingExperience === '보통' || application.programmingExperience === '숙련자'}
 			{#if application.knownFields}
@@ -81,13 +66,14 @@
 			<p class="content-text">{application.vibeServiceIdea || '미작성'}</p>
 		</div>
 	{/if}
-	
+
 	{#if application.activityChoice === '스터디'}
 		<div class="content-block">
 			<h2>스터디: 배우고 싶은 과목</h2>
 			{#if studySubjects.length > 0}
 				<div class="tags-container">
-					{#each studySubjects as subject}<span class="tag">{subject}</span>{/each}
+					{#each studySubjects as subject (subject)}
+						<span class="tag">{subject}</span>{/each}
 				</div>
 			{:else}
 				<p>선택 항목 없음</p>
@@ -103,7 +89,8 @@
 			<p><strong>사용하고 싶은 언어:</strong></p>
 			{#if bootcampMemberLangs.length > 0}
 				<div class="tags-container">
-					{#each bootcampMemberLangs as lang}<span class="tag">{lang}</span>{/each}
+					{#each bootcampMemberLangs as lang (lang)}
+						<span class="tag">{lang}</span>{/each}
 					{#if application.bootcampMemberLangsOther}
 						<span class="tag other">{application.bootcampMemberLangsOther}</span>
 					{/if}
@@ -113,14 +100,15 @@
 			{/if}
 		</div>
 	{/if}
-	
+
 	{#if application.activityChoice === '부트캠프 (멘토)'}
 		<div class="content-block">
 			<h2>부트캠프 (멘토): 정보</h2>
 			<p><strong>지도 가능한 언어:</strong></p>
 			{#if bootcampMentorLangs.length > 0}
 				<div class="tags-container">
-					{#each bootcampMentorLangs as lang}<span class="tag">{lang}</span>{/each}
+					{#each bootcampMentorLangs as lang (lang)}
+						<span class="tag">{lang}</span>{/each}
 					{#if application.bootcampMentorLangsOther}
 						<span class="tag other">{application.bootcampMentorLangsOther}</span>
 					{/if}
@@ -141,7 +129,7 @@
 		<h2>지원 동기</h2>
 		<p class="content-text">{application.motivation}</p>
 	</div>
-	
+
 	{#if application.finalWords}
 		<div class="content-block">
 			<h2>마지막으로 할 말</h2>
@@ -150,17 +138,11 @@
 	{/if}
 </div>
 
-
 <style>
 	/* ==========================================================================
 	   1. 페이지 최상위 레이아웃
 	   ========================================================================== */
-	.header-actions {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 2rem;
-	}
+
 	.back-link {
 		color: var(--secondary-color);
 		text-decoration: none;
@@ -206,7 +188,7 @@
 		gap: 1.5rem;
 		font-size: 0.9rem;
 	}
-	
+
 	/* ==========================================================================
 	   3. 공통 콘텐츠 블록 및 텍스트 스타일
 	   ========================================================================== */
@@ -236,7 +218,7 @@
 		color: var(--primary-color);
 		font-weight: bold;
 	}
-	
+
 	/* ==========================================================================
 	   4. 태그 UI 스타일
 	   ========================================================================== */
