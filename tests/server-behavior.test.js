@@ -350,6 +350,7 @@ test('signup validates the required fields and always assigns USER despite forge
 test('applications reject forged enum values and duplicate submissions before inserting', async () => {
 	const state = database([{ id: 'existing' }]);
 	const { actions } = await loadServerModule('src/routes/accession/application/+page.server.js', {
+		'$lib/site-features': { siteFeatures: { recruitment: true } },
 		'$lib/server/db': { db: state.db },
 		'$lib/server/db/schema': schema
 	});

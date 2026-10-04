@@ -1,4 +1,6 @@
 <script>
+	import { asset } from '$app/paths';
+	import { optimizedImages } from '$lib/image-assets';
 	const leadership = [
 		{
 			name: '송호민',
@@ -57,7 +59,20 @@
 			{#each leadership as member (member.name)}
 				<div class="member-card">
 					<div class="member-photo">
-						<img src={member.imageUrl} alt="{member.name} 프로필 사진" />
+						<picture>
+							{#if optimizedImages[member.imageUrl]}<source
+									srcset={asset(optimizedImages[member.imageUrl].src)}
+									type="image/webp"
+								/>{/if}
+							<img
+								src={member.imageUrl}
+								alt="{member.name} 프로필 사진"
+								loading="lazy"
+								decoding="async"
+								width={optimizedImages[member.imageUrl]?.width ?? 400}
+								height={optimizedImages[member.imageUrl]?.height ?? 400}
+							/>
+						</picture>
 					</div>
 					<div class="member-info">
 						<h3>{member.name}</h3>
@@ -76,7 +91,20 @@
 			{#each members as member (member.name)}
 				<div class="member-card">
 					<div class="member-photo">
-						<img src={member.imageUrl} alt="{member.name} 프로필 사진" />
+						<picture>
+							{#if optimizedImages[member.imageUrl]}<source
+									srcset={asset(optimizedImages[member.imageUrl].src)}
+									type="image/webp"
+								/>{/if}
+							<img
+								src={member.imageUrl}
+								alt="{member.name} 프로필 사진"
+								loading="lazy"
+								decoding="async"
+								width={optimizedImages[member.imageUrl]?.width ?? 400}
+								height={optimizedImages[member.imageUrl]?.height ?? 400}
+							/>
+						</picture>
 					</div>
 					<div class="member-info">
 						<h3>{member.name}</h3>
@@ -90,6 +118,11 @@
 </div>
 
 <style>
+	.member-photo picture {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
 	.page-container {
 		max-width: 1100px;
 		margin: 0 auto;

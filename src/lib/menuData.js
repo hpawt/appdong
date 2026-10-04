@@ -1,4 +1,18 @@
+import { siteFeatures } from './site-features';
+
 export const menuData = [
+	{
+		title: '일정·신청',
+		path: '/calendar',
+		columns: [
+			{
+				links: [
+					{ text: '일정 캘린더', path: '/calendar' },
+					{ text: '신청·설문', path: '/forms' }
+				]
+			}
+		]
+	},
 	{
 		title: 'About Us',
 		path: '/about-us',
@@ -38,4 +52,8 @@ export const menuData = [
 			}
 		]
 	}
-];
+].filter(
+	(item) =>
+		(item.path !== '/calendar' || siteFeatures.modu) &&
+		(item.path !== '/accession' || siteFeatures.recruitment)
+);

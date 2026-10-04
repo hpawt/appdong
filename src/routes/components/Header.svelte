@@ -1,9 +1,40 @@
 <script>
-	import { resolve } from '$app/paths';
+	import { resolve, asset } from '$app/paths';
 	import { menuPath } from '$lib/navigation';
 	import { menuData } from '$lib/menuData.js';
 	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
+	/** @type {HTMLDivElement} */ let mobileNav;
+	/** @type {HTMLButtonElement} */ let menuToggle;
+	async function toggleMenu() {
+		isMenuOpen = !isMenuOpen;
+		if (isMenuOpen) {
+			await tick();
+			mobileNav.querySelector('a')?.focus();
+		} else menuToggle.focus();
+	}
+	/** @param {KeyboardEvent} event */
+	function menuKeydown(event) {
+		if (event.key === 'Escape') {
+			if (isMenuOpen) {
+				isMenuOpen = false;
+				menuToggle.focus();
+			}
+			activeMenu = null;
+		}
+		if (event.key === 'Tab' && isMenuOpen) {
+			const items = [...mobileNav.querySelectorAll('a[href], button:not([disabled])'), menuToggle];
+			const first = /** @type {HTMLElement} */ (items[0]);
+			const last = menuToggle;
+			if (event.shiftKey && document.activeElement === first) {
+				event.preventDefault();
+				last.focus();
+			} else if (!event.shiftKey && document.activeElement === last) {
+				event.preventDefault();
+				first.focus();
+			}
+		}
+	}
 
 	/** @type {App.Locals['user']} */
 	export let user = null;
@@ -43,14 +74,7 @@
 	}
 </script>
 
-<svelte:window
-	on:keydown={(event) => {
-		if (event.key === 'Escape') {
-			isMenuOpen = false;
-			activeMenu = null;
-		}
-	}}
-/>
+<svelte:window on:keydown={menuKeydown} />
 
 {#if isMenuOpen}
 	<button type="button" class="overlay" aria-label="메뉴 닫기" on:click={() => (isMenuOpen = false)}
@@ -58,7 +82,14 @@
 {/if}
 
 <!-- =================== 모바일 메뉴 =================== -->
-<div id="mobile-nav" class="mobile-nav" class:is-open={isMenuOpen}>
+<div
+	id="mobile-nav"
+	bind:this={mobileNav}
+	class="mobile-nav"
+	class:is-open={isMenuOpen}
+	inert={!isMenuOpen}
+	aria-hidden={!isMenuOpen}
+>
 	<ul>
 		<!-- 👇 (핵심) #each 블록 내부의 구조를 수정했습니다. -->
 		{#each menuData as item (item.path)}
@@ -110,7 +141,7 @@
 <header use:closeOnLeave>
 	<nav>
 		<div class="logo">
-			<a href={resolve('/')}><img src="/apdoimg.png" alt="APPDONG Logo" /></a>
+			<a href={resolve('/')}><img src={asset('/apdoimg.png')} alt="APPDONG Logo" /></a>
 		</div>
 
 		<div class="desktop-nav">
@@ -131,10 +162,11 @@
 			</ul>
 			<div class="nav-right">
 				<div class="icons">
-					<a href="https://discord.com"><img src="/dcimg.svg" alt="Discord" /></a>
-					<a href="https://github.com/APPDONG-KNU"><img src="/ghimg.svg" alt="GitHub" /></a>
+					<a href="https://discord.com"><img src={asset('/dcimg.svg')} alt="Discord" /></a>
+					<a href="https://github.com/APPDONG-KNU"><img src={asset('/ghimg.svg')} alt="GitHub" /></a
+					>
 					<a href="https://www.instagram.com/knu.appdong"
-						><img src="/igimg.svg" alt="Instagram" /></a
+						><img src={asset('/igimg.svg')} alt="Instagram" /></a
 					>
 				</div>
 				{#if user}
@@ -150,9 +182,11 @@
 		</div>
 
 		<button
+			bind:this={menuToggle}
 			class="mobile-nav-toggle"
-			on:click={() => (isMenuOpen = !isMenuOpen)}
+			on:click={toggleMenu}
 			aria-label="메뉴 열기/닫기"
+			style:position={isMenuOpen ? 'fixed' : 'absolute'}
 			aria-expanded={isMenuOpen}
 			aria-controls="mobile-nav"
 		>
@@ -382,7 +416,7 @@
 		top: 0;
 		right: 0;
 		bottom: 0;
-		width: 280px;
+		width: min(320px, 100vw);
 		background-color: #1f2128;
 		z-index: 1000;
 		transform: translateX(100%);
@@ -433,10 +467,10 @@
 		}
 		.mobile-nav-toggle {
 			display: block;
-			position: fixed;
+			position: absolute;
 			top: 1rem;
 			right: 1.5rem;
-			background: none;
+			background: #1f2128;
 			border: none;
 			cursor: pointer;
 			padding: 0.5rem;

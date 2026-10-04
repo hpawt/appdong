@@ -132,7 +132,7 @@
 
 	<footer class="final-cta">
 		<h2 class="section-title">열정과 아이디어가 있다면,<br />당신도 앱동의 멤버입니다.</h2>
-		<a href={resolve('/accession')} class="cta-button">2025-2학기 모집 공고 확인하기</a>
+		<a href={resolve('/announce')} class="cta-button">동아리 소식 확인하기</a>
 	</footer>
 </div>
 

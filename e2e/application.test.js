@@ -1,8 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('public pages render without errors and the application supports both languages', async ({
-	page
-}) => {
+test('public pages render without errors and recruitment stays closed', async ({ page }) => {
 	/** @type {string[]} */ const errors = [];
 	page.on('pageerror', (error) => errors.push(error.message));
 	for (const path of [
@@ -19,11 +17,8 @@ test('public pages render without errors and the application supports both langu
 		await expect(page.locator('main')).toBeVisible();
 	}
 	await page.goto('/accession/application');
-	await expect(page.getByLabel('성명', { exact: true })).toBeEditable();
-	await page.getByRole('button', { name: 'English', exact: true }).click();
-	await expect(page.getByRole('heading', { name: 'Application Form' })).toBeVisible();
-	await page.locator('[name=activityChoice]').selectOption('스터디');
-	await expect(page.getByText('Study Subjects You Want to Learn', { exact: true })).toBeVisible();
+	await expect(page.getByRole('heading', { name: '현재는 모집 기간이 아닙니다' })).toBeVisible();
+	await expect(page.locator('main form')).toHaveCount(0);
 	await page.screenshot({
 		path: '.svelte-kit/screenshots/application-desktop.png',
 		fullPage: true
@@ -39,8 +34,8 @@ test('mobile menu closes on escape and route changes', async ({ page }) => {
 	await page.keyboard.press('Escape');
 	await expect(page.locator('.mobile-nav')).not.toHaveClass(/is-open/);
 	await page.getByRole('button', { name: '메뉴 열기/닫기' }).click();
-	await page.locator('.mobile-nav').getByRole('link', { name: '가입안내', exact: true }).click();
-	await expect(page).toHaveURL(/\/accession$/);
+	await page.locator('.mobile-nav').getByRole('link', { name: '동아리 소개', exact: true }).click();
+	await expect(page).toHaveURL(/\/about-us$/);
 	await expect(page.locator('.mobile-nav')).not.toHaveClass(/is-open/);
 	await expect
 		.poll(() => page.locator('.mobile-nav').evaluate((node) => node.getBoundingClientRect().left))

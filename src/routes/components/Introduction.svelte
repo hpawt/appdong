@@ -27,6 +27,8 @@
 		color: var(--primary-color);
 	}
 	.tag {
+		display: inline-block;
+		white-space: nowrap;
 		background-color: #444;
 		color: #fff;
 		padding: 0.2rem 0.5rem;
@@ -41,6 +43,12 @@
 	}
 
 	@media (max-width: 768px) {
+		.phonetic {
+			display: block;
+		}
+		.tag {
+			margin: 0.75rem 0 0;
+		}
 		.intro-section {
 			grid-template-columns: 1fr;
 			gap: 2rem;

@@ -19,17 +19,23 @@ await build({
 		{
 			name: 'svelte-fixture',
 			setup(builder) {
-				builder.onResolve({ filter: /^\$app\/(forms|paths)$/ }, ({ path }) => ({
+				builder.onResolve({ filter: /^\$app\/(forms|paths|navigation)$/ }, ({ path }) => ({
 					path,
 					namespace: 'fixture'
 				}));
 				builder.onLoad({ filter: /.*/, namespace: 'fixture' }, ({ path }) => ({
 					contents: path.endsWith('paths')
 						? 'export const resolve = path => path;'
-						: `export function enhance(node, submit) {
- function handler(event) { event.preventDefault(); let cancelled = false; submit?.({cancel(){cancelled=true;}}); if(!cancelled) window.fixtureSubmitted = Object.fromEntries(new FormData(node)); }
+						: path.endsWith('navigation')
+							? 'export async function goto(path) { window.fixtureNavigation = path; } export function beforeNavigate(callback) { window.fixtureBeforeNavigate=callback; }'
+							: `export async function applyAction(result) {window.fixtureResult=result;} export function enhance(node, submit) {
+ async function handler(event) { event.preventDefault(); let cancelled = false; const callback=submit?.({formElement:node,cancel(){cancelled=true;}}); if(!cancelled) { window.fixtureSubmitted = Object.fromEntries(new FormData(node)); if(callback) await callback({result:{type:'success', data:{success:true}},update:async()=>{}}); } }
  node.addEventListener('submit',handler); return {destroy(){node.removeEventListener('submit',handler);}};
 }`
+				}));
+				builder.onResolve({ filter: /^\$lib\// }, ({ path }) => ({
+					path:
+						join(process.cwd(), 'src/lib', path.slice(5)) + (path.endsWith('.svelte') ? '' : '.js')
 				}));
 				builder.onResolve({ filter: /^component-style:/ }, ({ path }) => ({
 					path,
@@ -59,7 +65,7 @@ await build({
 });
 await writeFile(
 	join(directory, 'index.html'),
-	'<!doctype html><html lang="ko"><head><meta charset="utf-8"><link rel="stylesheet" href="/app.css"></head><body style="background:#252830;color:#fff"><div id="app"></div><button id="unmount">편집기 종료</button><script type="module" src="/app.js"></script></body></html>'
+	'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/app.css"></head><body style="background:#252830;color:#fff"><div id="app"></div><button id="unmount">편집기 종료</button><script type="module" src="/app.js"></script></body></html>'
 );
 createServer(async (request, response) => {
 	const path = new URL(request.url, 'http://127.0.0.1:4180').pathname;

@@ -1,5 +1,17 @@
 // src/lib/server/db/schema.js
-import { pgTable, varchar, text, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+import {
+	pgTable,
+	varchar,
+	text,
+	timestamp,
+	pgEnum,
+	boolean,
+	date,
+	jsonb,
+	index,
+	check
+} from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 
 // 1. (핵심) 모든 Enum 타입들을 테이블 정의 바깥에서 먼저 생성합니다.
 export const roleEnum = pgEnum('role', ['USER', 'ADMIN']);
@@ -68,3 +80,51 @@ export const announcement = pgTable('announcement', {
 	attachments: text('attachments'),
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
 });
+
+export const calendarEvent = pgTable(
+	'calendar_event',
+	{
+		id: varchar('id', { length: 36 }).primaryKey(),
+		title: varchar('title', { length: 100 }).notNull(),
+		description: text('description').notNull().default(''),
+		location: varchar('location', { length: 150 }).notNull().default(''),
+		startDate: date('start_date', { mode: 'string' }).notNull(),
+		endDate: date('end_date', { mode: 'string' }).notNull(),
+		time: varchar('time', { length: 5 }).notNull().default(''),
+		category: varchar('category', { length: 20 }).notNull(),
+		pinned: boolean('pinned').notNull().default(false),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => [
+		index('calendar_event_dates_idx').on(table.startDate, table.endDate),
+		check('calendar_event_date_order', sql`${table.endDate} >= ${table.startDate}`)
+	]
+);
+
+export const customForm = pgTable('custom_form', {
+	id: varchar('id', { length: 36 }).primaryKey(),
+	title: varchar('title', { length: 150 }).notNull(),
+	description: text('description').notNull().default(''),
+	questions: jsonb('questions').notNull(),
+	published: boolean('published').notNull().default(false),
+	accepting: boolean('accepting').notNull().default(true),
+	version: varchar('version', { length: 36 }).notNull(),
+	createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
+});
+
+export const formResponse = pgTable(
+	'form_response',
+	{
+		id: varchar('id', { length: 36 }).primaryKey(),
+		formId: varchar('form_id', { length: 36 })
+			.notNull()
+			.references(() => customForm.id, { onDelete: 'cascade' }),
+		questions: jsonb('questions').notNull(),
+		answers: jsonb('answers').notNull(),
+		version: varchar('version', { length: 36 }).notNull(),
+		submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => [index('form_response_form_date_idx').on(table.formId, table.submittedAt)]
+);

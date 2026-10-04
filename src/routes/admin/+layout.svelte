@@ -1,6 +1,7 @@
 <script>
 	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
+	import { siteFeatures } from '$lib/site-features';
 
 	// 현재 URL 경로가 주어진 경로로 시작하는지 확인하여 active 상태를 결정합니다.
 	/** @param {string} path */
@@ -20,6 +21,12 @@
 			<h2>관리자 메뉴</h2>
 		</a>
 		<nav>
+			{#if siteFeatures.modu}<a
+					href={resolve('/admin/calendar')}
+					class:active={isActive('/admin/calendar')}>일정 관리</a
+				>
+				<a href={resolve('/admin/forms')} class:active={isActive('/admin/forms')}>신청·설문 폼</a
+				>{/if}
 			<a href={resolve('/admin/users')} class:active={isActive('/admin/users')}>회원 관리</a>
 			<a href={resolve('/admin/applications')} class:active={isActive('/admin/applications')}
 				>지원서 조회</a
@@ -34,6 +41,11 @@
 	<div class="admin-main-content">
 		<!-- =================== 모바일용 상단 탭 (모바일에서만 보임) =================== -->
 		<nav class="admin-mobile-nav">
+			{#if siteFeatures.modu}<a
+					href={resolve('/admin/calendar')}
+					class:active={isActive('/admin/calendar')}>일정</a
+				>
+				<a href={resolve('/admin/forms')} class:active={isActive('/admin/forms')}>폼 관리</a>{/if}
 			<a href={resolve('/admin')} class:active={isActive('/admin')}>대시보드</a>
 			<a href={resolve('/admin/users')} class:active={isActive('/admin/users')}>회원 관리</a>
 			<a href={resolve('/admin/applications')} class:active={isActive('/admin/applications')}

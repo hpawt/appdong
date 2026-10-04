@@ -1,0 +1,14 @@
+[
+	{
+		"file": "application-page.svelte.txt",
+		"sha256": "CECD8F8A2CB305F6FDD2995B3F88F8DDDCA6941B208D5E91BC114D7415398B20"
+	},
+	{
+		"file": "application-server.js.txt",
+		"sha256": "A0C125F7D4367301B59E2F447B74A7F978C0001FDDBFDD3A79CD345ADAE1BFB3"
+	},
+	{
+		"file": "recruitment-page.svelte.txt",
+		"sha256": "829BFF4A5CDED8B5FE816F6AF4260BF590B3867C7812CF276E413E3CFD4D4172"
+	}
+]

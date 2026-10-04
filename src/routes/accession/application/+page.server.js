@@ -3,9 +3,16 @@ import { fail } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { application as appTable, user as userTable } from '$lib/server/db/schema';
 import { readText, readChoices } from '$lib/server/validation';
+import { siteFeatures } from '$lib/site-features';
 
 export async function load({ locals }) {
-	if (!locals.user) return { user: null, alreadySubmitted: false, userData: null };
+	if (!siteFeatures.recruitment || !locals.user)
+		return {
+			recruitmentOpen: siteFeatures.recruitment,
+			user: locals.user ?? null,
+			alreadySubmitted: false,
+			userData: null
+		};
 	const user = locals.user;
 	const existingApplication = await db.query.application.findFirst({
 		where: eq(appTable.userId, user.id)
@@ -14,11 +21,18 @@ export async function load({ locals }) {
 		where: eq(userTable.id, user.id),
 		columns: { name: true, phone_number: true, department: true, student_id: true }
 	});
-	return { user, alreadySubmitted: !!existingApplication, userData: userData ?? null };
+	return {
+		recruitmentOpen: true,
+		user,
+		alreadySubmitted: !!existingApplication,
+		userData: userData ?? null
+	};
 }
 
 export const actions = {
 	default: async ({ request, locals }) => {
+		if (!siteFeatures.recruitment)
+			return fail(403, { message: '현재는 모집 기간이 아닙니다. 지원서 접수가 종료되었습니다.' });
 		const form = await request.formData();
 		const fullName = readText(form, 'fullName', { max: 255 });
 		const phoneNumber = readText(form, 'phoneNumber', { max: 11 });

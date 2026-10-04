@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { enhance, applyAction } from '$app/forms';
+	import { beginSubmission, focusFormError } from '$lib/form-feedback';
 	import { invalidateAll } from '$app/navigation';
 
 	export let form;
@@ -29,12 +30,22 @@
 
 		<form
 			method="POST"
-			use:enhance={() => {
+			use:enhance={({ formElement, cancel }) => {
+				const finish = beginSubmission(formElement);
+				if (!finish) {
+					cancel();
+					return;
+				}
 				return async ({ result }) => {
-					if (result.type === 'redirect') {
-						await invalidateAll();
+					try {
+						if (result.type === 'redirect') {
+							await invalidateAll();
+						}
+						await applyAction(result);
+						if (result.type === 'failure') await focusFormError(formElement);
+					} finally {
+						finish();
 					}
-					await applyAction(result);
 				};
 			}}
 		>
@@ -44,6 +55,9 @@
 					type="text"
 					id="username"
 					name="username"
+					autocomplete="username"
+					autocapitalize="none"
+					spellcheck="false"
 					placeholder="아이디를 입력하세요"
 					required
 				/>
@@ -54,13 +68,14 @@
 					type="password"
 					id="password"
 					name="password"
+					autocomplete="current-password"
 					placeholder="비밀번호를 입력하세요"
 					required
 				/>
 			</div>
 
 			{#if form?.message}
-				<p class="error-message">{form.message}</p>
+				<p class="error-message" role="alert" tabindex="-1">{form.message}</p>
 			{/if}
 
 			<button type="submit" class="submit-button">로그인</button>
@@ -75,6 +90,14 @@
 </div>
 
 <style>
+	@media (max-width: 480px) {
+		.auth-wrapper {
+			padding: 0.5rem !important;
+		}
+		.auth-container {
+			padding: 1.5rem 1rem !important;
+		}
+	}
 	.auth-wrapper {
 		display: flex;
 		align-items: center;

@@ -18,6 +18,8 @@ export async function loadServerModule(path, dependencies = {}) {
 		crypto,
 		URL,
 		FormData,
+		Request,
+		Response,
 		File,
 		TextEncoder,
 		TextDecoder,
@@ -25,7 +27,7 @@ export async function loadServerModule(path, dependencies = {}) {
 		Date,
 		Error
 	});
-	/** @type {Map<string, import('node:vm').Module>} */
+	/** @type {Map<string, Promise<import('node:vm').Module>>} */
 	const cache = new Map();
 	/** @param {Record<string, unknown>} values */
 	function synthetic(values) {
@@ -41,25 +43,25 @@ export async function loadServerModule(path, dependencies = {}) {
 	async function sourceModule(filename) {
 		const cached = cache.get(filename);
 		if (cached) return cached;
-		const module = new SourceTextModule(await readFile(filename, 'utf8'), {
-			context,
-			identifier: filename
-		});
-		cache.set(filename, module);
-		await module.link(async (specifier, referencing) => {
-			if (dependencies[specifier]) return synthetic(dependencies[specifier]);
-			if (specifier.startsWith('$lib/')) {
-				assert.ok(!specifier.startsWith('$lib/server/db'), 'Tests must explicitly replace the DB');
-				return sourceModule(resolve(root, 'src/lib', specifier.slice(5) + '.js'));
-			}
-			if (specifier.startsWith('.'))
-				return sourceModule(resolve(dirname(referencing.identifier), specifier));
-			assert.ok(!specifier.startsWith('$'), `Missing mock for ${specifier}`);
-			return synthetic(await import(specifier));
-		});
-		return module;
+		const loading = readFile(filename, 'utf8').then(
+			(code) => new SourceTextModule(code, { context, identifier: filename })
+		);
+		cache.set(filename, loading);
+		return loading;
 	}
 	const module = await sourceModule(resolve(root, path));
+	// Link the complete graph once. Repeated shared imports must not link concurrently.
+	await module.link(async (specifier, referencing) => {
+		if (dependencies[specifier]) return synthetic(dependencies[specifier]);
+		if (specifier.startsWith('$lib/')) {
+			assert.ok(!specifier.startsWith('$lib/server/db'), 'Tests must explicitly replace the DB');
+			return sourceModule(resolve(root, 'src/lib', specifier.slice(5) + '.js'));
+		}
+		if (specifier.startsWith('.'))
+			return sourceModule(resolve(dirname(referencing.identifier), specifier));
+		assert.ok(!specifier.startsWith('$'), `Missing mock for ${specifier}`);
+		return synthetic(await import(specifier));
+	});
 	await module.evaluate();
 	return /** @type {Record<string, any>} */ (module.namespace);
 }

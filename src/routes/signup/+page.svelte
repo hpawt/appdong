@@ -1,6 +1,7 @@
 <script>
 	import { resolve } from '$app/paths';
 	import { enhance, applyAction } from '$app/forms';
+	import { beginSubmission, focusFormError } from '$lib/form-feedback';
 	import { goto } from '$app/navigation';
 	import { onDestroy } from 'svelte';
 
@@ -49,18 +50,28 @@
 
 				<form
 					method="POST"
-					use:enhance={() => {
+					use:enhance={({ formElement, cancel }) => {
+						const finish = beginSubmission(formElement);
+						if (!finish) {
+							cancel();
+							return;
+						}
 						// 서버로부터 응답이 오면 실행될 콜백
 						return async ({ result }) => {
-							if (result.type === 'success') {
-								await applyAction(result);
-								signupSuccess = true;
+							try {
+								if (result.type === 'success') {
+									await applyAction(result);
+									signupSuccess = true;
 
-								redirectTimer = setTimeout(() => {
-									goto(resolve('/'));
-								}, 2500);
-							} else {
-								await applyAction(result);
+									redirectTimer = setTimeout(() => {
+										goto(resolve('/'));
+									}, 2500);
+								} else {
+									await applyAction(result);
+								}
+								if (result.type === 'failure') await focusFormError(formElement);
+							} finally {
+								finish();
 							}
 						};
 					}}
@@ -71,6 +82,9 @@
 							type="text"
 							id="username"
 							name="username"
+							autocomplete="username"
+							autocapitalize="none"
+							spellcheck="false"
 							placeholder="아이디 (3자 이상)"
 							required
 						/>
@@ -78,7 +92,14 @@
 
 					<div class="form-group">
 						<label for="name">성함</label>
-						<input type="text" id="name" name="name" placeholder="성함을 입력하세요" required />
+						<input
+							type="text"
+							id="name"
+							name="name"
+							autocomplete="name"
+							placeholder="성함을 입력하세요"
+							required
+						/>
 					</div>
 
 					<div class="form-group">
@@ -151,6 +172,7 @@
 								type={showPassword ? 'text' : 'password'}
 								id="password"
 								name="password"
+								autocomplete="new-password"
 								placeholder="비밀번호 (6자 이상)"
 								required
 								bind:value={password}
@@ -175,6 +197,7 @@
 							type="password"
 							id="confirm_password"
 							name="confirm_password"
+							autocomplete="new-password"
 							placeholder="비밀번호를 다시 입력하세요"
 							required
 							bind:value={confirmPassword}
@@ -185,7 +208,7 @@
 					</div>
 
 					{#if form?.message && !signupSuccess}
-						<p class="error-message">{form.message}</p>
+						<p class="error-message" role="alert" tabindex="-1">{form.message}</p>
 					{/if}
 
 					<button type="submit" class="submit-button">가입하기</button>
@@ -199,6 +222,14 @@
 </div>
 
 <style>
+	@media (max-width: 480px) {
+		.auth-wrapper {
+			padding: 0.5rem !important;
+		}
+		.auth-container {
+			padding: 1.5rem 1rem !important;
+		}
+	}
 	.auth-wrapper {
 		display: flex;
 		align-items: center;

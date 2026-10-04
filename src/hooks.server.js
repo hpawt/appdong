@@ -1,4 +1,5 @@
-import { redirect } from '@sveltejs/kit';
+import { redirect, error } from '@sveltejs/kit';
+import { siteFeatures } from '$lib/site-features';
 import {
 	sessionCookieName,
 	validateSessionToken,
@@ -26,6 +27,8 @@ export async function handle({ event, resolve }) {
 			redirect(303, '/login');
 		requireAdmin(event.locals);
 	}
+	if (!siteFeatures.modu && /^\/(?:admin\/)?(?:calendar|forms)(?:\/|$)/.test(routeId))
+		error(404, '페이지를 준비하고 있습니다.');
 	return resolve(event);
 }
 

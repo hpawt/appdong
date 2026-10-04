@@ -1,5 +1,6 @@
 <script>
 	import { resolve } from '$app/paths';
+	import 'quill/dist/quill.snow.css';
 	export let data;
 	$: announcement = data.announcement;
 </script>
@@ -98,6 +99,55 @@
 		font-size: 1.15rem;
 		line-height: 2;
 		color: #d1d5db;
+	}
+	/* Sanitized content omits editor-only UI spans; render list markers on the item. */
+	:global(.content .ql-editor li[data-list]::before) {
+		display: inline-block;
+		margin-left: -1.5em;
+		margin-right: 0.3em;
+		text-align: right;
+		white-space: nowrap;
+		width: 1.2em;
+	}
+	:global(.content .ql-editor li[data-list] > .ql-ui::before) {
+		content: none;
+	}
+	:global(.content .ql-editor li[data-list='bullet']::before) {
+		content: '\2022';
+	}
+	:global(.content .ql-editor li[data-list='checked']::before) {
+		content: '\2611';
+	}
+	:global(.content .ql-editor li[data-list='unchecked']::before) {
+		content: '\2610';
+	}
+	:global(.content .ql-editor li[data-list='ordered']::before) {
+		content: counter(list-0, decimal) '. ';
+	}
+
+	:global(.content .ql-editor li[data-list='ordered'].ql-indent-1::before) {
+		content: counter(list-1, lower-alpha) '. ';
+	}
+	:global(.content .ql-editor li[data-list='ordered'].ql-indent-2::before) {
+		content: counter(list-2, lower-roman) '. ';
+	}
+	:global(.content .ql-editor li[data-list='ordered'].ql-indent-3::before) {
+		content: counter(list-3, decimal) '. ';
+	}
+	:global(.content .ql-editor li[data-list='ordered'].ql-indent-4::before) {
+		content: counter(list-4, lower-alpha) '. ';
+	}
+	:global(.content .ql-editor li[data-list='ordered'].ql-indent-5::before) {
+		content: counter(list-5, lower-roman) '. ';
+	}
+	:global(.content .ql-editor li[data-list='ordered'].ql-indent-6::before) {
+		content: counter(list-6, decimal) '. ';
+	}
+	:global(.content .ql-editor li[data-list='ordered'].ql-indent-7::before) {
+		content: counter(list-7, lower-alpha) '. ';
+	}
+	:global(.content .ql-editor li[data-list='ordered'].ql-indent-8::before) {
+		content: counter(list-8, lower-roman) '. ';
 	}
 
 	/* 👇 (수정) 이 규칙은 오직 '아래 여백'만 담당하도록 합니다. 밑줄(border)은 절대 넣지 않습니다. */
