@@ -10,7 +10,8 @@ const titles = {
 	'/forgot-password': '비밀번호 안내',
 	'/my-page': '마이페이지',
 	'/calendar': '일정 캘린더',
-	'/forms': '신청·설문'
+	'/forms': '신청·설문',
+	'/playground': '일정·설문 기능 체험'
 };
 
 /** @param {string} pathname @param {{announcement?: {title?: string}, definition?: {title?: string}}} [data] */
@@ -27,7 +28,7 @@ export function pageMetadata(pathname, data = {}) {
 			: `${name}. 경북대학교 중앙동아리 앱동 공식 웹사이트입니다.`,
 		canonical: `https://www.appdong.com${pathname}`,
 		noindex:
-			/^\/(?:admin|login|signup|logout|my-page|forgot-password|accession|calendar|forms|demo)(?:\/|$)/.test(
+			/^\/(?:admin|login|signup|logout|my-page|forgot-password|accession|calendar|forms|demo|playground)(?:\/|$)/.test(
 				pathname
 			)
 	};

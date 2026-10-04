@@ -7,7 +7,7 @@
 		address: '대구광역시 북구 대학로 80, 경북대학교 백호관 610호',
 		email: '@knu.appdong',
 		president: { name: '송호민', phone: 'Hominsong@knu.ac.kr' },
-		vicePresidents: [{ name: '이고은', phone: 'Youka1122@naver.com' }],
+		vicePresidents: [{ name: '강수영', phone: '' }],
 		social: {
 			instagram: 'https://www.instagram.com/knu.appdong',
 			github: 'https://github.com/APPDONG-KNU',

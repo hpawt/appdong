@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import { eventCategories, todayKey } from '$lib/modu';
+	import { inputMessage } from '$lib/modu-validation';
 	export let initial = {
 		title: '',
 		description: '',
@@ -14,8 +15,23 @@
 	};
 	export let message = '';
 	export let submitLabel = '일정 등록';
+	/** @type {null | ((form: FormData) => void | Promise<void>)} */ export let onSave = null;
+	/** @type {null | (() => void)} */ export let onCancel = null;
 	let values = { ...initial };
 	let busy = false;
+	let localMessage = '';
+	/** @param {HTMLFormElement} element */
+	async function saveLocal(element) {
+		busy = true;
+		localMessage = '';
+		try {
+			await onSave?.(new FormData(element));
+		} catch (cause) {
+			localMessage = inputMessage(cause);
+		} finally {
+			busy = false;
+		}
+	}
 	/** @param {Event} event */
 	function changeStart(event) {
 		values.startDate = /** @type {HTMLInputElement} */ (event.currentTarget).value;
@@ -26,9 +42,14 @@
 <form
 	method="POST"
 	action="?/save"
-	use:enhance={({ cancel }) => {
+	use:enhance={({ cancel, formElement }) => {
 		if (busy) {
 			cancel();
+			return;
+		}
+		if (onSave) {
+			cancel();
+			void saveLocal(formElement);
 			return;
 		}
 		busy = true;
@@ -109,11 +130,11 @@
 	<label class="check"
 		><input name="pinned" type="checkbox" bind:checked={values.pinned} /> 중요한 공지로 고정</label
 	>
-	{#if message}<p role="alert">{message}</p>{/if}
+	{#if message || localMessage}<p role="alert">{message || localMessage}</p>{/if}
 	<div class="actions">
-		<a href={resolve('/admin/calendar')}>취소</a><button disabled={busy} type="submit"
-			>{busy ? '저장 중…' : submitLabel}</button
-		>
+		{#if onCancel}<button type="button" on:click={onCancel}>취소</button>{:else}<a
+				href={resolve('/admin/calendar')}>취소</a
+			>{/if}<button disabled={busy} type="submit">{busy ? '저장 중…' : submitLabel}</button>
 	</div>
 </form>
 

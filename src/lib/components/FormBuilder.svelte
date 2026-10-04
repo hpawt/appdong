@@ -1,13 +1,28 @@
 <script>
 	import { enhance } from '$app/forms';
 	import { emptyForm, questionTypes } from '$lib/modu';
+	import { inputMessage } from '$lib/modu-validation';
 	import QuestionFields from '$lib/components/QuestionFields.svelte';
 	/** @type {import('$lib/modu').FormDefinition} */ export let initial = emptyForm();
 	export let version = '';
 	export let message = '';
 	export let submitLabel = '저장';
+	/** @type {null | ((form: FormData) => void | Promise<void>)} */ export let onSave = null;
 	let definition = structuredClone(initial);
 	let busy = false;
+	let localMessage = '';
+	/** @param {HTMLFormElement} element */
+	async function saveLocal(element) {
+		busy = true;
+		localMessage = '';
+		try {
+			await onSave?.(new FormData(element));
+		} catch (cause) {
+			localMessage = inputMessage(cause);
+		} finally {
+			busy = false;
+		}
+	}
 	let preview = false;
 	/** @type {Record<string, string>} */
 	let choices = Object.fromEntries(definition.questions.map((q) => [q.id, q.options.join('\n')]));
@@ -68,9 +83,14 @@
 	class="builder"
 	method="POST"
 	action="?/save"
-	use:enhance={({ cancel }) => {
+	use:enhance={({ cancel, formElement }) => {
 		if (busy) {
 			cancel();
+			return;
+		}
+		if (onSave) {
+			cancel();
+			void saveLocal(formElement);
 			return;
 		}
 		busy = true;
@@ -100,11 +120,10 @@
 			maxlength="5000"
 			bind:value={definition.description}
 		></textarea>
-		<div class="settings">
-			<label><input type="checkbox" bind:checked={definition.published} /> 링크로 공개</label><label
-				><input type="checkbox" bind:checked={definition.accepting} /> 응답 받기</label
-			>
-		</div>
+		{#if !onSave}<div class="settings">
+				<label><input type="checkbox" bind:checked={definition.published} /> 링크로 공개</label
+				><label><input type="checkbox" bind:checked={definition.accepting} /> 응답 받기</label>
+			</div>{/if}
 	</section>
 	{#each definition.questions as question, index (question.id)}
 		<section class="question-card" aria-label={`질문 ${index + 1} 편집`}>
@@ -167,7 +186,7 @@
 			>미리보기</button
 		>
 	</div>
-	{#if message}<p role="alert">{message}</p>{/if}
+	{#if message || localMessage}<p role="alert">{message || localMessage}</p>{/if}
 	<button class="save" type="submit" disabled={busy}>{busy ? '저장 중…' : submitLabel}</button>
 </form>
 {#if preview}<section class="preview">

@@ -3,11 +3,17 @@
 	import { resolve } from '$app/paths';
 	import { tick } from 'svelte';
 	import { calendarDays, occursOn, todayKey, shiftMonth, eventCategories } from '$lib/modu';
+	import { filterEvents, calendarFile, downloadFile } from '$lib/calendar-tools';
 	export let month = todayKey().slice(0, 7);
 	/** @type {import('$lib/modu').CalendarEvent[]} */ export let events = [];
 	/** @type {import('$lib/modu').CalendarEvent[]} */ export let pinnedEvents = [];
 	export let unavailable = false;
 	export let admin = false;
+	/** @type {null | ((month: string) => void)} */ export let onMonthChange = null;
+	/** @type {null | ((event: import('$lib/modu').CalendarEvent) => void)} */ export let onEdit =
+		null;
+	let query = '';
+	let category = '';
 	let selected = month === todayKey().slice(0, 7) ? todayKey() : month + '-01';
 	let activeMonth = month;
 	let view = 'calendar';
@@ -19,14 +25,20 @@
 		activeMonth = month;
 		selected = month === todayKey().slice(0, 7) ? todayKey() : month + '-01';
 	}
-	$: selectedEvents = events.filter((event) => occursOn(event, selected));
-	$: monthEvents = events.filter(
+	$: visibleEvents = filterEvents(events, query, category);
+	$: visiblePinned = filterEvents(pinnedEvents, query, category);
+	$: selectedEvents = visibleEvents.filter((event) => occursOn(event, selected));
+	$: monthEvents = visibleEvents.filter(
 		(event) => event.startDate.slice(0, 7) <= month && event.endDate.slice(0, 7) >= month
 	);
 	/** @param {string} target */
 	async function navigate(target) {
 		navigationError = '';
 		try {
+			if (onMonthChange) {
+				onMonthChange(target);
+				return;
+			}
 			const options = { keepFocus: true, noScroll: true };
 			if (admin) await goto(resolve(`/admin/calendar?month=${target}`), options);
 			else await goto(resolve(`/calendar?month=${target}`), options);
@@ -43,6 +55,14 @@
 	/** @param {string} category */
 	function categoryLabel(category) {
 		return Object.entries(eventCategories).find(([key]) => key === category)?.[1] || category;
+	}
+	/** @param {import('$lib/modu').CalendarEvent[]} items */
+	function exportCalendar(items) {
+		try {
+			downloadFile(calendarFile(items), `appdong-${month}.ics`, 'text/calendar;charset=utf-8');
+		} catch {
+			navigationError = '일정을 내보내지 못했습니다. 날짜와 시간을 확인해주세요.';
+		}
 	}
 </script>
 
@@ -74,6 +94,28 @@
 		><button aria-pressed={view === 'list'} on:click={() => (view = 'list')}>목록 보기</button>
 	</div>
 </div>
+<div class="filters">
+	<label
+		>일정 검색<input
+			type="search"
+			bind:value={query}
+			maxlength="200"
+			placeholder="제목·장소·내용 검색"
+		/></label
+	>
+	<label
+		>일정 종류<select aria-label="일정 종류 필터" bind:value={category}
+			><option value="">전체</option
+			>{#each Object.entries(eventCategories) as [key, label] (key)}<option value={key}
+					>{label}</option
+				>{/each}</select
+		></label
+	>
+	<button disabled={!monthEvents.length} on:click={() => exportCalendar(monthEvents)}
+		>현재 목록 내보내기 (.ics)</button
+	>
+</div>
+<p role="status">이번 달 검색 결과 {monthEvents.length}개</p>
 <div class="board">
 	<div class="calendar">
 		{#if view === 'calendar'}
@@ -82,7 +124,7 @@
 			</div>
 			<div class="days">
 				{#each days as day (day)}
-					{@const dailyEvents = events.filter((event) => occursOn(event, day))}
+					{@const dailyEvents = visibleEvents.filter((event) => occursOn(event, day))}
 					<div class="day" class:other={!day.startsWith(month)} class:selected={day === selected}>
 						<button
 							class="date"
@@ -117,7 +159,7 @@
 	</div>
 	<aside>
 		<h3>중요 공지</h3>
-		{#each pinnedEvents as event (event.id)}<button
+		{#each visiblePinned as event (event.id)}<button
 				class="event-row"
 				on:click={() => showDetail(event)}
 				><strong>★ {event.title}</strong><small
@@ -148,11 +190,40 @@
 		<p>{detail.startDate} ~ {detail.endDate} · {detail.time || '종일'}</p>
 		{#if detail.location}<p>장소: {detail.location}</p>{/if}
 		<p class="description">{detail.description}</p>
-		{#if admin}<a href={resolve('/admin/calendar/[id]', { id: detail.id })}>일정 수정·삭제</a>{/if}
+		<button on:click={() => detail && exportCalendar([detail])}>이 일정 내보내기 (.ics)</button>
+		{#if onEdit}<button
+				on:click={() => {
+					if (detail) onEdit?.(detail);
+					dialog.close();
+				}}>일정 수정·삭제</button
+			>
+		{:else if admin}<a href={resolve('/admin/calendar/[id]', { id: detail.id })}>일정 수정·삭제</a
+			>{/if}
 	{/if}
 </dialog>
 
 <style>
+	.filters {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: end;
+		gap: 0.75rem;
+	}
+	.filters label {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		flex: 1 1 140px;
+	}
+	.filters input,
+	.filters select {
+		width: 100%;
+		padding: 0.6rem;
+		border: 1px solid #555b68;
+		border-radius: 6px;
+		color: var(--text-color);
+		background: #252830;
+	}
 	.toolbar,
 	.month-controls,
 	.view-controls,

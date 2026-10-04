@@ -6,42 +6,52 @@
 			name: '송호민',
 			department: '전자공학부',
 			role: '회장',
-			// 👇 나중에 실제 이미지 경로로 바꿔주세요. (예: '/images/members/homin.jpg')
-			// imageUrl: 'https://placehold.co/400x400/252830/FFF?text=Homin'
 			imageUrl: '/homin1.png'
 		},
 		{
-			name: '이고은',
-			department: '일어일문학과',
+			name: '강수영',
+			department: '약학과',
 			role: '부회장',
-			imageUrl: '/goeun.jpeg'
+			imageUrl: ''
 		}
 	];
 
 	const members = [
 		{
-			name: '임정민',
-			department: '컴퓨터학부',
+			name: '양현우',
+			department: '전자공학부',
 			role: '기획부장',
-			imageUrl: 'https://placehold.co/400x400/252830/FFF?text=Jeongmin'
+			imageUrl: ''
 		},
 		{
-			name: '이경언',
-			department: '컴퓨터학부',
+			name: '오진묵',
+			department: '전자공학부 모바일공학전공',
 			role: '교육부장',
-			imageUrl: '/gyeong.png'
+			imageUrl: ''
 		},
 		{
-			name: '이화영',
-			department: '에너지공학부',
+			name: '최민정',
+			department: '전자공학부',
 			role: '홍보부장',
-			imageUrl: '/hwayeong.png'
+			imageUrl: ''
 		},
 		{
 			name: '유준호',
 			department: '전자공학부',
-			role: '기술부장', // 나중에 직책을 수정하세요.
+			role: '기술부장',
 			imageUrl: '/junho.png'
+		},
+		{
+			name: '이주환',
+			department: '컴퓨터공학부',
+			role: '교육부원',
+			imageUrl: ''
+		},
+		{
+			name: '이경언',
+			department: '컴퓨터학부',
+			role: '교육부원',
+			imageUrl: '/gyeong.png'
 		}
 	];
 </script>
@@ -59,25 +69,27 @@
 			{#each leadership as member (member.name)}
 				<div class="member-card">
 					<div class="member-photo">
-						<picture>
-							{#if optimizedImages[member.imageUrl]}<source
-									srcset={asset(optimizedImages[member.imageUrl].src)}
-									type="image/webp"
-								/>{/if}
-							<img
-								src={member.imageUrl}
-								alt="{member.name} 프로필 사진"
-								loading="lazy"
-								decoding="async"
-								width={optimizedImages[member.imageUrl]?.width ?? 400}
-								height={optimizedImages[member.imageUrl]?.height ?? 400}
-							/>
-						</picture>
+						{#if member.imageUrl}<picture>
+								{#if optimizedImages[member.imageUrl]}<source
+										srcset={asset(optimizedImages[member.imageUrl].src)}
+										type="image/webp"
+									/>{/if}
+								<img
+									src={member.imageUrl}
+									alt="{member.name} 프로필 사진"
+									loading="lazy"
+									decoding="async"
+									width={optimizedImages[member.imageUrl]?.width ?? 400}
+									height={optimizedImages[member.imageUrl]?.height ?? 400}
+								/>
+							</picture>{:else}<span class="member-placeholder" aria-hidden="true"
+								>{member.name.slice(0, 1)}</span
+							>{/if}
 					</div>
 					<div class="member-info">
 						<h3>{member.name}</h3>
 						<p class="role">{member.role}</p>
-						<p class="department">{member.department}</p>
+						{#if member.department}<p class="department">{member.department}</p>{/if}
 					</div>
 				</div>
 			{/each}
@@ -91,25 +103,27 @@
 			{#each members as member (member.name)}
 				<div class="member-card">
 					<div class="member-photo">
-						<picture>
-							{#if optimizedImages[member.imageUrl]}<source
-									srcset={asset(optimizedImages[member.imageUrl].src)}
-									type="image/webp"
-								/>{/if}
-							<img
-								src={member.imageUrl}
-								alt="{member.name} 프로필 사진"
-								loading="lazy"
-								decoding="async"
-								width={optimizedImages[member.imageUrl]?.width ?? 400}
-								height={optimizedImages[member.imageUrl]?.height ?? 400}
-							/>
-						</picture>
+						{#if member.imageUrl}<picture>
+								{#if optimizedImages[member.imageUrl]}<source
+										srcset={asset(optimizedImages[member.imageUrl].src)}
+										type="image/webp"
+									/>{/if}
+								<img
+									src={member.imageUrl}
+									alt="{member.name} 프로필 사진"
+									loading="lazy"
+									decoding="async"
+									width={optimizedImages[member.imageUrl]?.width ?? 400}
+									height={optimizedImages[member.imageUrl]?.height ?? 400}
+								/>
+							</picture>{:else}<span class="member-placeholder" aria-hidden="true"
+								>{member.name.slice(0, 1)}</span
+							>{/if}
 					</div>
 					<div class="member-info">
 						<h3>{member.name}</h3>
 						<p class="role">{member.role}</p>
-						<p class="department">{member.department}</p>
+						{#if member.department}<p class="department">{member.department}</p>{/if}
 					</div>
 				</div>
 			{/each}
@@ -118,6 +132,17 @@
 </div>
 
 <style>
+	.member-placeholder {
+		display: grid;
+		place-items: center;
+		width: 100%;
+		height: 100%;
+		border: 3px solid var(--border-color);
+		border-radius: 50%;
+		background: #343a48;
+		color: var(--secondary-color);
+		font-size: 2.5rem;
+	}
 	.member-photo picture {
 		display: block;
 		width: 100%;
